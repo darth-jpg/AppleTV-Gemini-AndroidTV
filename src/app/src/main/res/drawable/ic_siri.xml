@@ -1,0 +1,16 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- Apple Intelligence / Siri Sparkle Starburst -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M12,2L14.4,8.6L21,11L14.4,13.4L12,20L9.6,13.4L3,11L9.6,8.6Z" />
+    <path
+        android:fillColor="#B3FFFFFF"
+        android:pathData="M19,2L20.2,5.3L23.5,6.5L20.2,7.7L19,11L17.8,7.7L14.5,6.5L17.8,5.3Z" />
+    <path
+        android:fillColor="#80FFFFFF"
+        android:pathData="M5,17L5.8,19.2L8,20L5.8,20.8L5,23L4.2,20.8L2,20L4.2,19.2Z" />
+</vector>

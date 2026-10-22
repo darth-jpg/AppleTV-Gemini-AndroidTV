@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/pitch_black">
+
+    <ImageView
+        android:id="@+id/iv_screensaver_1"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="centerCrop" />
+
+    <ImageView
+        android:id="@+id/iv_screensaver_2"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="centerCrop"
+        android:alpha="0" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/wallpaper_dim_overlay" />
+
+    <LinearLayout
+        android:id="@+id/screensaver_caption_layout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|start"
+        android:layout_marginStart="48dp"
+        android:layout_marginBottom="32dp"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/tv_screensaver_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Costa Na Pali"
+            android:textColor="@color/white"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:letterSpacing="0.04"
+            android:shadowColor="#99000000"
+            android:shadowRadius="10" />
+
+        <TextView
+            android:id="@+id/tv_screensaver_subtitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:text="Kauai • Havai"
+            android:textColor="#B0FFFFFF"
+            android:textSize="12sp"
+            android:letterSpacing="0.12"
+            android:shadowColor="#99000000"
+            android:shadowRadius="8" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/screensaver_clock_layout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_marginEnd="48dp"
+        android:layout_marginBottom="32dp"
+        android:gravity="end"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/tv_screensaver_clock"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="12:00"
+            android:textColor="#E0FFFFFF"
+            android:textSize="28sp"
+            android:includeFontPadding="false"
+            android:shadowColor="#99000000"
+            android:shadowRadius="8" />
+
+        <TextView
+            android:id="@+id/tv_screensaver_date"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:text="QUARTA-FEIRA 21 OUT"
+            android:textColor="#90FFFFFF"
+            android:textSize="11sp"
+            android:letterSpacing="0.14"
+            android:shadowColor="#99000000"
+            android:shadowRadius="6" />
+    </LinearLayout>
+</FrameLayout>

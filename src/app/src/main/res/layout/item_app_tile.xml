@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/tile_root"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:gravity="center_horizontal"
+    android:layout_margin="6dp"
+    android:clipChildren="false"
+    android:clipToPadding="false">
+
+    <FrameLayout
+        android:id="@+id/tile_frame"
+        android:layout_width="112dp"
+        android:layout_height="63dp"
+        android:background="@drawable/tile_focus_glass"
+        android:focusable="true">
+
+        <ImageView
+            android:id="@+id/tile_icon"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="centerCrop" />
+    </FrameLayout>
+
+    <!-- Label is hidden (alpha=0) by default; smoothly fades in on focus -->
+    <TextView
+        android:id="@+id/tile_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="5dp"
+        android:textColor="@color/white"
+        android:textSize="11sp"
+        android:maxLines="1"
+        android:alpha="0"
+        android:shadowColor="#CC000000"
+        android:shadowRadius="6"
+        android:shadowDy="2" />
+</LinearLayout>

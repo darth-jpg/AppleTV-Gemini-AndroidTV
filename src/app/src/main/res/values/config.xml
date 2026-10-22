@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <integer name="INPUT_KEY_SERVICE">1</integer>
+    <integer name="HOME_KEY_SERVICE">1</integer>
+
+    <integer-array name="input_key_keycodes">
+        <item>178</item> <!-- KEYCODE_TV_INPUT -->
+        <item>172</item> <!-- KEYCODE_GUIDE -->
+        <item>4506</item> <!-- KEYCODE_TCL_AV1 -->
+        <item>4507</item> <!-- KEYCODE_TCL_HDMI1 -->
+        <item>4508</item> <!-- KEYCODE_TCL_HDMI2 -->
+        <item>4509</item> <!-- KEYCODE_TCL_HDMI3 -->
+    </integer-array>
+
+    <integer-array name="settings_key_keycodes">
+        <item>176</item> <!-- KEYCODE_SETTINGS -->
+        <item>82</item>  <!-- KEYCODE_MENU -->
+        <item>312</item> <!-- KEYCODE_QUICK_SETTINGS -->
+        <item>4514</item> <!-- KEYCODE_TCL_QUICK_SETTINGS -->
+        <item>4137</item> <!-- KEYCODE_TCL_DASHBOARD -->
+    </integer-array>
+
+    <string-array name="app_keys">
+        <item>188:com.google.android.youtube.tv</item>
+        <item>4065:com.google.android.youtube.tv</item>
+        <item>190:com.netflix.ninja</item>
+        <item>4062:com.netflix.ninja</item>
+        <item>191:com.amazon.amazonvideo.livingroom</item>
+        <item>4099:com.amazon.amazonvideo.livingroom</item>
+        <item>189:com.wbd.stream</item>
+        <item>4141:com.wbd.stream</item>
+        <item>4020:com.plexapp.android</item>
+        <item>4184:com.plexapp.android</item>
+    </string-array>
+</resources>

@@ -1,0 +1,699 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/root_layout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/pitch_black"
+    android:clipChildren="false"
+    android:clipToPadding="false">
+
+    <!-- Scenic Landscape Wallpaper -->
+    <ImageView
+        android:id="@+id/iv_wallpaper"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="centerCrop"
+        android:src="@drawable/wallpaper" />
+
+    <!-- Dark gradient overlay for text and pill readability (tvOS style) -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/wallpaper_dim_overlay" />
+
+    <!-- Full-screen Ambient Glow Layer (seamless, borderless tvOS ambient light) -->
+    <View
+        android:id="@+id/view_ambient_glow"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <!-- Scrollable container for Dock and App Grid -->
+    <ScrollView
+        android:id="@+id/main_scroll"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true"
+        android:scrollbars="none"
+        android:clipChildren="false"
+        android:clipToPadding="false">
+
+        <LinearLayout
+            android:id="@+id/content_container"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingStart="48dp"
+            android:paddingEnd="48dp"
+            android:paddingTop="28dp"
+            android:paddingBottom="48dp"
+            android:clipChildren="false"
+            android:clipToPadding="false">
+
+            <!-- Top Bar (webos-vibehack layout) -->
+            <RelativeLayout
+                android:id="@+id/top_bar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <!-- Left: Greeting + Weather Row, and Time Row below -->
+                <LinearLayout
+                    android:id="@+id/clock_group"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentStart="true"
+                    android:layout_centerVertical="true"
+                    android:orientation="vertical">
+
+                    <!-- Top Row: Greeting + Weather Widget -->
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <TextView
+                            android:id="@+id/tv_greeting"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="BOM DIA"
+                            android:textColor="#8E8E93"
+                            android:textSize="11sp"
+                            android:letterSpacing="0.22"
+                            android:textStyle="bold" />
+
+                        <!-- Weather Widget -->
+                        <TextView
+                            android:id="@+id/tv_weather"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="12dp"
+                            android:text="•  --°C  LISBOA"
+                            android:textColor="#8E8E93"
+                            android:textSize="11sp"
+                            android:letterSpacing="0.16"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+
+                    <!-- Bottom Row: Clock | Divider | Date -->
+                    <LinearLayout
+                        android:id="@+id/time_row"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="bottom"
+                        android:layout_marginTop="2dp">
+
+                        <TextView
+                            android:id="@+id/tv_clock"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="19:05"
+                            android:textColor="@color/white"
+                            android:textSize="50sp"
+                            android:includeFontPadding="false" />
+
+                        <!-- Vertical Divider (vibehack style) -->
+                        <View
+                            android:layout_width="1.5dp"
+                            android:layout_height="28dp"
+                            android:layout_marginStart="14dp"
+                            android:layout_marginEnd="14dp"
+                            android:layout_marginBottom="7dp"
+                            android:background="#33FFFFFF" />
+
+                        <TextView
+                            android:id="@+id/tv_date"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginBottom="9dp"
+                            android:text="TERÇA-FEIRA 20 OUTUBRO"
+                            android:textColor="#A0A0A5"
+                            android:textSize="13sp"
+                            android:letterSpacing="0.14" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- Right: Frosted Pill Buttons -->
+                <LinearLayout
+                    android:id="@+id/pills_group"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentEnd="true"
+                    android:layout_centerVertical="true"
+                    android:orientation="horizontal">
+
+                    <!-- Sleep Timer Pill -->
+                    <Button
+                        android:id="@+id/btn_sleep"
+                        android:layout_width="wrap_content"
+                        android:layout_height="38dp"
+                        android:background="@drawable/pill_bg"
+                        android:text="Desligar"
+                        android:textColor="@color/pill_text_color"
+                        android:textSize="13sp"
+                        android:drawableStart="@drawable/ic_timer"
+                        android:drawablePadding="7dp"
+                        android:drawableTint="@color/pill_text_color"
+                        android:paddingStart="16dp"
+                        android:paddingEnd="18dp"
+                        android:focusable="true"
+                        android:nextFocusDown="@id/dock_item_1" />
+
+                    <!-- Inputs Pill -->
+                    <Button
+                        android:id="@+id/btn_inputs"
+                        android:layout_width="wrap_content"
+                        android:layout_height="38dp"
+                        android:layout_marginStart="10dp"
+                        android:background="@drawable/pill_bg"
+                        android:text="Entradas"
+                        android:textColor="@color/pill_text_color"
+                        android:textSize="13sp"
+                        android:drawableStart="@drawable/ic_inputs"
+                        android:drawablePadding="7dp"
+                        android:drawableTint="@color/pill_text_color"
+                        android:paddingStart="16dp"
+                        android:paddingEnd="18dp"
+                        android:focusable="true"
+                        android:nextFocusDown="@id/dock_item_2" />
+
+                    <!-- Wi-Fi Pill -->
+                    <Button
+                        android:id="@+id/btn_wifi"
+                        android:layout_width="wrap_content"
+                        android:layout_height="38dp"
+                        android:layout_marginStart="10dp"
+                        android:background="@drawable/pill_bg"
+                        android:text="Wi-Fi"
+                        android:textColor="@color/pill_text_color"
+                        android:textSize="13sp"
+                        android:drawableStart="@drawable/ic_wifi"
+                        android:drawablePadding="7dp"
+                        android:drawableTint="@color/pill_text_color"
+                        android:paddingStart="16dp"
+                        android:paddingEnd="18dp"
+                        android:focusable="true"
+                        android:nextFocusDown="@id/dock_item_3" />
+
+                    <!-- Settings Pill -->
+                    <Button
+                        android:id="@+id/btn_settings"
+                        android:layout_width="wrap_content"
+                        android:layout_height="38dp"
+                        android:layout_marginStart="10dp"
+                        android:background="@drawable/pill_bg"
+                        android:text="Definições"
+                        android:textColor="@color/pill_text_color"
+                        android:textSize="13sp"
+                        android:drawableStart="@drawable/ic_settings"
+                        android:drawablePadding="7dp"
+                        android:drawableTint="@color/pill_text_color"
+                        android:paddingStart="16dp"
+                        android:paddingEnd="18dp"
+                        android:focusable="true"
+                        android:nextFocusDown="@id/dock_item_4" />
+                </LinearLayout>
+            </RelativeLayout>
+
+            <!-- Centered Master Section: Left-aligned Hero Title + Dock Band -->
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:orientation="vertical"
+                android:layout_marginTop="255dp">
+
+                <!-- Active Dock App Title (Left-aligned above dock) -->
+                <FrameLayout
+                    android:id="@+id/glow_area"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingStart="8dp"
+                    android:paddingBottom="6dp"
+                    android:clipChildren="false"
+                    android:clipToPadding="false">
+
+                    <!-- Large Thin Active App Name (Left-aligned, Apple TV 4K style) -->
+                    <TextView
+                        android:id="@+id/tv_active_dock_title"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="start|center_vertical"
+                        android:text="YouTube"
+                        android:textColor="@color/white"
+                        android:textSize="28sp"
+                        android:includeFontPadding="false"
+                        android:shadowColor="#99000000"
+                        android:shadowRadius="10" />
+                </FrameLayout>
+
+                <!-- Dock Row (Apple TV Style rounded band - populated dynamically) -->
+                <LinearLayout
+                    android:id="@+id/dock_container"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/dock_bg"
+                    android:orientation="horizontal"
+                    android:paddingStart="10dp"
+                    android:paddingEnd="10dp"
+                    android:paddingTop="8dp"
+                    android:paddingBottom="8dp"
+                    android:clipChildren="false"
+                    android:clipToPadding="false"
+                    android:focusable="false" />
+            </LinearLayout>
+
+            <!-- Down indicator & Section Header with Manage Apps Button -->
+            <RelativeLayout
+                android:id="@+id/grid_header"
+                android:layout_width="496dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="160dp"
+                android:layout_marginBottom="16dp">
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentStart="true"
+                    android:layout_centerVertical="true"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="▼  "
+                        android:textColor="@color/gray_text"
+                        android:textSize="12sp" />
+
+                    <TextView
+                        android:id="@+id/tv_more_apps_title"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/section_more_apps"
+                        android:textColor="@color/gray_text"
+                        android:textSize="14sp" />
+                </LinearLayout>
+
+                <Button
+                    android:id="@+id/btn_manage_apps"
+                    android:layout_width="wrap_content"
+                    android:layout_height="32dp"
+                    android:layout_alignParentEnd="true"
+                    android:layout_centerVertical="true"
+                    android:background="@drawable/pill_bg"
+                    android:text="Gerir Apps"
+                    android:textColor="@color/pill_text_color"
+                    android:textSize="11sp"
+                    android:drawableStart="@drawable/ic_settings"
+                    android:drawablePadding="5dp"
+                    android:drawableTint="@color/pill_text_color"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="14dp"
+                    android:focusable="true" />
+            </RelativeLayout>
+
+            <!-- 4-Column Apps Grid -->
+            <GridLayout
+                android:id="@+id/apps_grid"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:columnCount="4"
+                android:alignmentMode="alignMargins"
+                android:clipChildren="false"
+                android:clipToPadding="false" />
+
+        </LinearLayout>
+    </ScrollView>
+
+    <!-- Dropdown menu popup for TV Inputs (HDMI 1, 2, 3, AV, TV) -->
+    <LinearLayout
+        android:id="@+id/dropdown_inputs"
+        android:layout_width="220dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|end"
+        android:layout_marginTop="75dp"
+        android:layout_marginEnd="180dp"
+        android:background="@drawable/dropdown_bg"
+        android:orientation="vertical"
+        android:padding="8dp"
+        android:elevation="16dp"
+        android:visibility="gone">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingStart="12dp"
+            android:paddingTop="8dp"
+            android:paddingBottom="6dp"
+            android:text="ENTRADAS DE VÍDEO"
+            android:textColor="@color/gray_text"
+            android:textSize="11sp" />
+
+        <Button
+            android:id="@+id/item_input_hdmi1"
+            android:layout_width="match_parent"
+            android:layout_height="36dp"
+            android:background="@drawable/dropdown_item_bg"
+            android:gravity="center_vertical|start"
+            android:paddingStart="12dp"
+            android:text="HDMI 1"
+            android:textColor="@color/dropdown_item_text"
+            android:textSize="13sp"
+            android:focusable="true" />
+
+        <Button
+            android:id="@+id/item_input_hdmi2"
+            android:layout_width="match_parent"
+            android:layout_height="36dp"
+            android:background="@drawable/dropdown_item_bg"
+            android:gravity="center_vertical|start"
+            android:paddingStart="12dp"
+            android:text="HDMI 2"
+            android:textColor="@color/dropdown_item_text"
+            android:textSize="13sp"
+            android:focusable="true" />
+
+        <Button
+            android:id="@+id/item_input_hdmi3"
+            android:layout_width="match_parent"
+            android:layout_height="36dp"
+            android:background="@drawable/dropdown_item_bg"
+            android:gravity="center_vertical|start"
+            android:paddingStart="12dp"
+            android:text="HDMI 3"
+            android:textColor="@color/dropdown_item_text"
+            android:textSize="13sp"
+            android:focusable="true" />
+
+        <Button
+            android:id="@+id/item_input_tv"
+            android:layout_width="match_parent"
+            android:layout_height="36dp"
+            android:background="@drawable/dropdown_item_bg"
+            android:gravity="center_vertical|start"
+            android:paddingStart="12dp"
+            android:text="TV / Antena"
+            android:textColor="@color/dropdown_item_text"
+            android:textSize="13sp"
+            android:focusable="true" />
+
+        <Button
+            android:id="@+id/item_input_av"
+            android:layout_width="match_parent"
+            android:layout_height="36dp"
+            android:background="@drawable/dropdown_item_bg"
+            android:gravity="center_vertical|start"
+            android:paddingStart="12dp"
+            android:text="AV / Composto"
+            android:textColor="@color/dropdown_item_text"
+            android:textSize="13sp"
+            android:focusable="true" />
+    </LinearLayout>
+
+    <!-- Full-screen Apple TV Aerial Screensaver Overlay -->
+    <FrameLayout
+        android:id="@+id/screensaver_overlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone"
+        android:background="@color/pitch_black"
+        android:clickable="true"
+        android:focusable="false">
+
+        <!-- Cross-fading Aerial Image 1 -->
+        <ImageView
+            android:id="@+id/iv_screensaver_1"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="centerCrop" />
+
+        <!-- Cross-fading Aerial Image 2 -->
+        <ImageView
+            android:id="@+id/iv_screensaver_2"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="centerCrop"
+            android:alpha="0" />
+
+        <!-- Cinematic Vignette / Dim Overlay for captions -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/wallpaper_dim_overlay" />
+
+        <!-- Bottom Left: Apple TV Style Location Caption -->
+        <LinearLayout
+            android:id="@+id/screensaver_caption_layout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|start"
+            android:layout_marginStart="48dp"
+            android:layout_marginBottom="32dp"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tv_screensaver_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Costa Na Pali"
+                android:textColor="@color/white"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.04"
+                android:shadowColor="#99000000"
+                android:shadowRadius="10" />
+
+            <TextView
+                android:id="@+id/tv_screensaver_subtitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="Havai • Estados Unidos"
+                android:textColor="#B0FFFFFF"
+                android:textSize="12sp"
+                android:letterSpacing="0.12"
+                android:shadowColor="#99000000"
+                android:shadowRadius="8" />
+        </LinearLayout>
+
+        <!-- Bottom Right: Subtle Floating Time & Date -->
+        <LinearLayout
+            android:id="@+id/screensaver_clock_layout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|end"
+            android:layout_marginEnd="48dp"
+            android:layout_marginBottom="32dp"
+            android:gravity="end"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tv_screensaver_clock"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="12:00"
+                android:textColor="#E0FFFFFF"
+                android:textSize="28sp"
+                android:includeFontPadding="false"
+                android:shadowColor="#99000000"
+                android:shadowRadius="8" />
+
+            <TextView
+                android:id="@+id/tv_screensaver_date"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="QUARTA-FEIRA 21 OUT"
+                android:textColor="#90FFFFFF"
+                android:textSize="11sp"
+                android:letterSpacing="0.14"
+                android:shadowColor="#99000000"
+                android:shadowRadius="6" />
+        </LinearLayout>
+
+        <!-- Subtle Top Hint: Touch remote to resume -->
+        <TextView
+            android:id="@+id/tv_screensaver_hint"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="top|center_horizontal"
+            android:layout_marginTop="24dp"
+            android:text="Pressiona qualquer botão para retomar"
+            android:textColor="#40FFFFFF"
+            android:textSize="11sp"
+            android:letterSpacing="0.1" />
+    </FrameLayout>
+
+    <!-- Apple Intelligence / Siri Voice Assistant Floating Card -->
+    <FrameLayout
+        android:id="@+id/siri_overlay_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone"
+        android:clickable="true"
+        android:focusable="false"
+        android:background="#66000000">
+
+        <LinearLayout
+            android:id="@+id/siri_card"
+            android:layout_width="720dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|center_horizontal"
+            android:layout_marginBottom="40dp"
+            android:background="@drawable/siri_card_bg"
+            android:orientation="vertical"
+            android:paddingStart="32dp"
+            android:paddingEnd="32dp"
+            android:paddingTop="22dp"
+            android:paddingBottom="24dp"
+            android:elevation="16dp">
+
+            <!-- Top Row: Glowing Orb + Siri Title + Close Hint -->
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_alignParentStart="true">
+
+                    <!-- Pulsating Siri Glowing Orb -->
+                    <ImageView
+                        android:id="@+id/siri_orb"
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:src="@drawable/siri_orb_glow" />
+
+                    <TextView
+                        android:id="@+id/tv_siri_title"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="12dp"
+                        android:text="Gemini"
+                        android:textColor="@color/white"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:letterSpacing="0.04" />
+                </LinearLayout>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentEnd="true"
+                    android:layout_centerVertical="true"
+                    android:text="Pressiona Voltar para fechar"
+                    android:textColor="#80FFFFFF"
+                    android:textSize="11sp" />
+            </RelativeLayout>
+
+            <!-- User Query Transcription -->
+            <TextView
+                android:id="@+id/tv_siri_query"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:text="A ouvir..."
+                android:textColor="#B3FFFFFF"
+                android:textSize="15sp"
+                android:lineSpacingExtra="4dp" />
+
+            <!-- AI Response Text -->
+            <TextView
+                android:id="@+id/tv_siri_response"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:text=""
+                android:textColor="@color/white"
+                android:textSize="17sp"
+                android:textStyle="bold"
+                android:lineSpacingExtra="4dp"
+                android:visibility="gone" />
+
+            <!-- Action Badge / Chip -->
+            <TextView
+                android:id="@+id/tv_siri_badge"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:background="@drawable/siri_chip_bg"
+                android:paddingStart="14dp"
+                android:paddingEnd="14dp"
+                android:paddingTop="6dp"
+                android:paddingBottom="6dp"
+                android:textColor="#A0E0FF"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:visibility="gone" />
+
+            <!-- Quick Suggestion Chips (Fallback / Idle options) -->
+            <LinearLayout
+                android:id="@+id/siri_suggestions_layout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:orientation="horizontal"
+                android:visibility="gone">
+
+                <Button
+                    android:id="@+id/btn_siri_chip1"
+                    android:layout_width="wrap_content"
+                    android:layout_height="32dp"
+                    android:background="@drawable/siri_chip_bg"
+                    android:text="⏱️ Desligar em 30m"
+                    android:textColor="@color/white"
+                    android:textSize="12sp"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="12dp"
+                    android:focusable="true" />
+
+                <Button
+                    android:id="@+id/btn_siri_chip2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="32dp"
+                    android:layout_marginStart="8dp"
+                    android:background="@drawable/siri_chip_bg"
+                    android:text="🚀 Abrir Plex"
+                    android:textColor="@color/white"
+                    android:textSize="12sp"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="12dp"
+                    android:focusable="true" />
+
+                <Button
+                    android:id="@+id/btn_siri_chip3"
+                    android:layout_width="wrap_content"
+                    android:layout_height="32dp"
+                    android:layout_marginStart="8dp"
+                    android:background="@drawable/siri_chip_bg"
+                    android:text="🎮 Steam Link"
+                    android:textColor="@color/white"
+                    android:textSize="12sp"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="12dp"
+                    android:focusable="true" />
+
+                <Button
+                    android:id="@+id/btn_siri_chip4"
+                    android:layout_width="wrap_content"
+                    android:layout_height="32dp"
+                    android:layout_marginStart="8dp"
+                    android:background="@drawable/siri_chip_bg"
+                    android:text="📺 HDMI 1"
+                    android:textColor="@color/white"
+                    android:textSize="12sp"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="12dp"
+                    android:focusable="true" />
+            </LinearLayout>
+
+        </LinearLayout>
+    </FrameLayout>
+
+</FrameLayout>

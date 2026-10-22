@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="pitch_black">#000000</color>
+    <color name="dock_bg">#141416</color>
+    <color name="dock_stroke">#242428</color>
+    <color name="pill_bg_normal">#1E1E22</color>
+    <color name="pill_stroke">#303036</color>
+    <color name="pill_bg_focused">#FFFFFF</color>
+    <color name="pill_text_normal">#D0D0D4</color>
+    <color name="pill_text_focused">#000000</color>
+    <color name="white">#FFFFFF</color>
+    <color name="gray_text">#8E8E93</color>
+    <color name="dropdown_bg">#18181B</color>
+    <color name="dropdown_stroke">#2E2E33</color>
+    <color name="tile_border_focus">#99FFFFFF</color>
+</resources>
