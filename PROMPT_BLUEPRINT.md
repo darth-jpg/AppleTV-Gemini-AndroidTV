@@ -26,17 +26,22 @@ Follow this systematic 6-phase engineering workflow:
 1. Disable universal Google TV adware and telemetry:
    - `com.google.android.apps.tv.launcherx` (Stock ad-heavy launcher)
    - `com.google.android.apps.tv.dreamx` (Stock screensaver)
-   - `com.google.android.tungsten.setupwraith`
-   - `tv.samba.ssm.ui` (ACR automatic content recognition)
+   - `com.google.android.tungsten.setupwraith` (Setup wizard / telemetry)
+   - `com.google.android.tvrecommendations`, `com.google.android.leanbacklauncher.recommendations` (Sponsored rows)
+   - `com.google.android.feedback`, `com.android.tv.feedbackconsent`, `com.google.android.apps.tv.netoscope`
+   - `com.google.android.adservices.api`, `com.google.android.ext.adservices.api` (Privacy Sandbox ad services)
+   - `tv.samba.ssm`, `tv.samba.ssm.ui` (ACR automatic content recognition)
 2. Apply manufacturer-specific service disabling (do NOT uninstall system packages, only `disable-user --user 0` to preserve factory reset safety):
-   - IF TCL: disable `com.tcl.channelplus`, `com.tcl.guard`, `com.tcl.tv.tclhome_passive`, `com.tcl.logkit`, `com.tcl.waterfall.overseas`
-   - IF Xiaomi: disable `com.xiaomi.mitv.upgrade`, `com.xiaomi.mitv.advert`
-   - IF Sony: disable `com.sony.dtv.b2b.core` (preserve Bravia picture calibration services)
+   - **IF TCL:** disable `com.tcl.tv.tclhome_passive`, `com.tcl.partnercustomizer`, `com.tcl.channelplus`, `com.tcl.guard`, `com.tcl.logkit`, `com.tcl.waterfall.overseas`, `com.tcl.useragreement`, `com.tcl.miracast`, `com.tcl.esticker`
+   - **IF Sony Bravia:** disable `com.sony.dtv.sonyselect`, `com.sony.dtv.promos`, `com.sony.dtv.discovery`, `com.sony.dtv.bivlinfo`, `com.sony.dtv.tvlaunchercustomizer`, `android.autoinstalls.config.sony.bravia`, `com.sony.dtv.demomode`, `com.sony.dtv.da.service`, `com.qterics.da.product`, `com.sony.dtv.b2b.vendorprotocol` (preserve Bravia picture calibration and audio services)
+   - **IF Xiaomi / Mi TV:** disable `com.miui.tv.analytics`, `com.xiaomi.statistic`, `com.mitv.tvhome.atv`, `com.mitv.tvhome.michannel`, `com.mitv.tvhome.mitvplus`, `com.xm.webcontent`, `com.xiaomi.mitv.tvmanager`, `com.xiaomi.mitv.smartshare`, `com.mitv.milinkservice`, `android.autoinstalls.config.xiaomi.amelie`
+   - **IF Philips:** disable `org.droidtv.nettvrecommender`, `org.droidtv.channels`, `org.droidtv.demomode`
 
 ### Phase 3: tvOS Launcher Architecture (Native Leanback)
 1. Build an Android TV launcher application (`com.appletv.launcher`) with `android.intent.category.HOME`:
    - Dynamic floating dock with Apple TV glassmorphism (radial gradient borders, blur layer, elevation scaling on focus).
    - Focused card animation: smooth 1.08x scale with 150ms interpolator.
+   - **Interactive "Hold OK to Move" App Reordering:** Holding OK on any tile enters reorder mode. Remote D-Pad arrows dynamically swap tiles horizontally and vertically, with persistent order storage in `SharedPreferences`.
    - Categorized horizontal scrolling grids for Apps, Cloud/PC Gaming (Steam Link, Luna, Moonlight), and System Tools.
    - Dynamic top bar with live clock, Open-Meteo weather widget (no API key required), and minimal action pills: [Sleep Timer] [Inputs] [Wi-Fi] [Settings].
 2. Implement 4K Apple Aerial Screensavers using Android `DreamService` (`AppleTvDreamService`):

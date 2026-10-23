@@ -70,7 +70,13 @@ public class MainActivity extends Activity {
     private static final String PREFS_NAME = "apple_tv_prefs";
     private static final String KEY_DOCK_PREFIX = "dock_slot_";
     private static final String KEY_DOCK_LIST = "dock_packages_list";
+    private static final String KEY_GRID_LIST = "custom_grid_packages_list";
     private static final String KEY_HIDDEN_PACKAGES = "hidden_packages_set";
+
+    // Reorder Mode ("Hold OK to Move")
+    private boolean isReorderMode = false;
+    private boolean isReorderingDock = false;
+    private int reorderIndex = -1;
     private static final String KEY_SCREENSAVER_TIMEOUT = "screensaver_timeout_mins";
     private static final String KEY_SOUND_EFFECTS = "sound_effects_enabled";
     private static final String KEY_SOUND_MODE = "sound_mode_setting";
@@ -1272,10 +1278,36 @@ public class MainActivity extends Activity {
 
         // 4. Populate Grid items from all installed apps not in dock and not hidden
         Set<String> hiddenSet = getHiddenPackages();
+        List<AppItem> unplaced = new ArrayList<>();
         for (AppItem app : allInstalledApps) {
             if (!dockSet.contains(app.packageName) && !hiddenSet.contains(app.packageName)) {
-                gridItems.add(app);
+                unplaced.add(app);
             }
+        }
+
+        // Support persistent custom grid ordering
+        SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        String savedGrid = prefs.getString(KEY_GRID_LIST, null);
+        if (savedGrid != null && !savedGrid.trim().isEmpty()) {
+            String[] savedOrder = savedGrid.split(",");
+            Map<String, AppItem> unplacedMap = new HashMap<>();
+            for (AppItem item : unplaced) {
+                unplacedMap.put(item.packageName, item);
+            }
+            for (String pkg : savedOrder) {
+                AppItem itm = unplacedMap.remove(pkg);
+                if (itm != null) {
+                    gridItems.add(itm);
+                }
+            }
+            // Append any new apps installed after saved order
+            for (AppItem item : unplaced) {
+                if (unplacedMap.containsKey(item.packageName)) {
+                    gridItems.add(item);
+                }
+            }
+        } else {
+            gridItems.addAll(unplaced);
         }
     }
 
@@ -1476,12 +1508,135 @@ public class MainActivity extends Activity {
         applySoundMode(soundMode);
     }
 
+    private void startReorderMode(boolean inDock, int index) {
+        isReorderMode = true;
+        isReorderingDock = inDock;
+        reorderIndex = index;
+        playNavSound();
+        Toast.makeText(this, "🖐️ Mover Aplicação: Usa as setas do comando • Pressiona OK ou Voltar para fixar", Toast.LENGTH_LONG).show();
+        updateReorderVisuals();
+    }
+
+    private void stopReorderMode() {
+        if (!isReorderMode) return;
+        isReorderMode = false;
+        playNavSound();
+        Toast.makeText(this, "✓ Posição guardada", Toast.LENGTH_SHORT).show();
+
+        if (isReorderingDock) {
+            saveDockPackageList(getDockPackageList());
+            reloadAll();
+            handler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    View v = findViewById(500 + reorderIndex);
+                    if (v != null) v.requestFocus();
+                }
+            }, 80);
+        } else {
+            saveGridPackageList();
+            reloadAll();
+            handler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    View v = findViewById(1000 + reorderIndex);
+                    if (v != null) v.requestFocus();
+                }
+            }, 80);
+        }
+    }
+
+    private void moveReorderDock(int delta) {
+        int newIndex = reorderIndex + delta;
+        List<String> list = getDockPackageList();
+        if (newIndex >= 0 && newIndex < list.size() && newIndex < dockItems.size()) {
+            String pkg = list.remove(reorderIndex);
+            list.add(newIndex, pkg);
+            saveDockPackageList(list);
+
+            AppItem item = dockItems.remove(reorderIndex);
+            dockItems.add(newIndex, item);
+
+            reorderIndex = newIndex;
+            lastFocusedDockIndex = newIndex;
+            playNavSound();
+            setupDock();
+            updateReorderVisuals();
+        }
+    }
+
+    private void moveReorderGrid(int delta) {
+        int newIndex = reorderIndex + delta;
+        if (newIndex >= 0 && newIndex < gridItems.size()) {
+            AppItem item = gridItems.remove(reorderIndex);
+            gridItems.add(newIndex, item);
+            reorderIndex = newIndex;
+            saveGridPackageList();
+            playNavSound();
+            setupGrid();
+            updateReorderVisuals();
+        }
+    }
+
+    private void updateReorderVisuals() {
+        if (!isReorderMode) return;
+        if (isReorderingDock) {
+            for (int i = 0; i < dockContainer.getChildCount(); i++) {
+                View child = dockContainer.getChildAt(i);
+                if (child != null) {
+                    FrameLayout frame = child.findViewById(R.id.dock_item_frame);
+                    if (frame != null) {
+                        if (i == reorderIndex) {
+                            frame.animate().scaleX(1.15f).scaleY(1.15f).alpha(1.0f).setDuration(120).start();
+                            frame.requestFocus();
+                        } else {
+                            frame.animate().scaleX(0.95f).scaleY(0.95f).alpha(0.5f).setDuration(120).start();
+                        }
+                    }
+                }
+            }
+        } else {
+            for (int i = 0; i < appsGrid.getChildCount(); i++) {
+                View child = appsGrid.getChildAt(i);
+                if (child != null) {
+                    FrameLayout frame = child.findViewById(R.id.tile_frame);
+                    if (frame != null) {
+                        if (i == reorderIndex) {
+                            frame.animate().scaleX(1.15f).scaleY(1.15f).alpha(1.0f).setDuration(120).start();
+                            frame.requestFocus();
+                        } else {
+                            frame.animate().scaleX(0.95f).scaleY(0.95f).alpha(0.5f).setDuration(120).start();
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private void saveGridPackageList() {
+        SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < gridItems.size(); i++) {
+            if (i > 0) sb.append(",");
+            sb.append(gridItems.get(i).packageName);
+        }
+        prefs.edit().putString(KEY_GRID_LIST, sb.toString()).apply();
+    }
+
     private void showDockItemOptionsDialog(final int slotIndex, final AppItem item) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_Alert);
         builder.setTitle(item.label + " (Dock)");
 
         final List<String> options = new ArrayList<>();
         final List<Runnable> actions = new ArrayList<>();
+
+        options.add("🖐️ Mover com as setas do comando");
+        actions.add(new Runnable() {
+            @Override
+            public void run() {
+                startReorderMode(true, slotIndex);
+            }
+        });
 
         options.add("🔁 Substituir aplicação...");
         actions.add(new Runnable() {
@@ -1790,6 +1945,23 @@ public class MainActivity extends Activity {
         final List<String> options = new ArrayList<>();
         final List<Runnable> actions = new ArrayList<>();
 
+        options.add("🖐️ Mover com as setas do comando");
+        actions.add(new Runnable() {
+            @Override
+            public void run() {
+                int idx = -1;
+                for (int i = 0; i < gridItems.size(); i++) {
+                    if (gridItems.get(i).packageName.equals(item.packageName)) {
+                        idx = i;
+                        break;
+                    }
+                }
+                if (idx != -1) {
+                    startReorderMode(false, idx);
+                }
+            }
+        });
+
         if (dockItems.size() < 6) {
             options.add("⭐ Adicionar à Dock");
             actions.add(new Runnable() {
@@ -2054,6 +2226,33 @@ public class MainActivity extends Activity {
         // so that A/Cross clicks focused items and B/O/X/Y behave naturally without launching apps
         if (isGamepadOrController(event)) {
             return super.dispatchKeyEvent(event);
+        }
+
+        // Reorder Mode key interception (Move app with D-Pad, confirm with OK or Back)
+        if (isReorderMode) {
+            int action = event.getAction();
+            int keyCode = event.getKeyCode();
+            if (action == KeyEvent.ACTION_DOWN) {
+                if (keyCode == KeyEvent.KEYCODE_DPAD_LEFT) {
+                    if (isReorderingDock) moveReorderDock(-1);
+                    else moveReorderGrid(-1);
+                    return true;
+                } else if (keyCode == KeyEvent.KEYCODE_DPAD_RIGHT) {
+                    if (isReorderingDock) moveReorderDock(1);
+                    else moveReorderGrid(1);
+                    return true;
+                } else if (keyCode == KeyEvent.KEYCODE_DPAD_UP) {
+                    if (!isReorderingDock) moveReorderGrid(-4);
+                    return true;
+                } else if (keyCode == KeyEvent.KEYCODE_DPAD_DOWN) {
+                    if (!isReorderingDock) moveReorderGrid(4);
+                    return true;
+                } else if (keyCode == KeyEvent.KEYCODE_DPAD_CENTER || keyCode == KeyEvent.KEYCODE_ENTER || keyCode == KeyEvent.KEYCODE_BACK) {
+                    stopReorderMode();
+                    return true;
+                }
+            }
+            return true;
         }
 
         int keyCode = event.getKeyCode();

@@ -28,10 +28,11 @@
 | :--- | :--- | :--- |
 | **RAM Footprint** | ~500MB – 650MB RAM | **< 40MB RAM** (92% reduction) |
 | **Ads & Promoted Content** | Full-screen unskippable video ads & trailers | **Zero ads**, pure clean interface |
+| **App Organization** | Fixed manufacturer rows & forced suggestions | **Interactive "Hold OK to Move"** with remote D-Pad |
 | **Voice Assistant** | Slow, generic recommendations | **Google Gemini Flash** (Fast conversational TV control) |
 | **Screensaver** | Generic Google ambient mode | **Apple TV 4K Aerials** (Ken Burns effect + live clock) |
 | **Gaming Controllers** | OEM remote shortcuts hijack gamepads | **Zero-latency bypass** for DualSense 5 / Xbox |
-| **Manufacturer Telemetry** | Active tracking & background bloat | **Completely disabled** (Safe debloat) |
+| **Manufacturer Telemetry** | Active tracking & background bloat | **Universal Safe Debloat** (Google TV, TCL, Sony, Xiaomi, Philips) |
 
 ---
 
@@ -39,6 +40,7 @@
 
 1. **Pure tvOS Aesthetics & Fluid Physics:**
    - Translucent floating dock with real-time focus elevation, smooth magnification, and D-pad navigation.
+   - **Interactive "Hold OK to Move" App Reordering:** Hold the remote OK button on any Dock or Grid tile to enter reorder mode. Use remote D-pad arrows to freely reposition apps horizontally and vertically; press OK or Back to lock in place. Order is permanently remembered.
    - Dynamic top bar with Sleep Timer, HDMI Inputs switcher, Wi-Fi status, and Settings.
    - Dynamic real-time weather widget (powered by Open-Meteo, zero API keys required).
 
