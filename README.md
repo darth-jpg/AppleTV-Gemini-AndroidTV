@@ -44,8 +44,13 @@
    - **Specular Focus Sheen:** Refined 3D liquid glass focus highlight with smooth 1.06x elevation on active apps.
    - **Uniform Squircle Icon Balancing:** Automatic aspect-ratio centering for 1:1 square app icons inside glass cards.
    - **Interactive "Hold OK to Move" App Reordering:** Hold the remote OK button on any Dock or Grid tile to enter reorder mode. Use remote D-pad arrows to freely reposition apps horizontally and vertically; press OK or Back to lock in place. Order is permanently remembered.
+   - **tvOS Parallax Scrim Dimming:** Smooth dynamic background dimming when scrolling down into the apps grid to maximize icon contrast and readability, automatically fading back to scenic landscape on the Dock.
+   - **Interactive Apple Weather Card:** Frosted glass forecast modal with real-time temperature, apparent temperature (feels like), humidity %, wind speed, and location switcher.
+   - **Bluetooth Audio & Accessories Shortcut:** Direct 1-click access to TV Bluetooth settings in Control Center for late-night headphones or pairing gamepads.
+   - **Smart Input Folding & Custom HDMI Inputs:** Hide unused ports and customize active inputs (*PlayStation 5, Xbox, Nintendo Switch, PC Gamer, Apple TV*).
+   - **App Hiding (Debloat UI):** Long-press any app in the grid to hide unwanted factory bloatware apps, with 1-click restore in Settings.
+   - **Auto-Boot Guarantee (`BOOT_COMPLETED`):** Instant native launch on TV power-on, preventing factory tuners from taking over.
    - **tvOS Control Center & Quick Restart:** Integrated system menu on the Settings pill with 1-click TV reboot, sleep timer, screensaver trigger, and sound mode switcher.
-   - **Customizable HDMI Inputs:** Real-time port renaming (*PlayStation 5, Xbox, Nintendo Switch, PC Gamer, Apple TV*) with long-press customization.
    - Dynamic top bar with Sleep Timer, HDMI Inputs switcher, Wi-Fi status, and Settings.
    - Dynamic real-time weather widget (powered by Open-Meteo, zero API keys required).
 
@@ -72,20 +77,28 @@ Want to adapt this project to your specific TV model (TCL, Sony, Xiaomi, Philips
 
 ---
 
-## 🚀 Quick Installation (Windows 1-Click)
+## 🚀 Quick Installation (1-Click Wi-Fi Setup)
 
 ### Prerequisites:
 1. Enable **Developer Options** and **USB Debugging** on your TV (*Settings -> System -> About -> Click Build 7 times -> Developer Options -> USB Debugging*).
 2. Note your TV's IP address (*Settings -> Network & Internet*).
 
-### Install:
-1. Download the latest release from the [Releases](releases/) folder.
-2. Run `scripts/install_windows.bat`:
-   - Enter your TV's IP address when prompted.
-   - The script connects over Wi-Fi, safely debloats background services, installs the launcher, and configures accessibility permissions automatically.
+### Option A: Windows
+1. Run `scripts/install_windows.bat`.
+2. Enter your TV's IP address when prompted. The script automatically connects over Wi-Fi, safely debloats telemetry and ads, installs the APK, and sets up permissions.
+
+### Option B: macOS & Linux
+1. Open terminal and run:
+   ```bash
+   chmod +x scripts/install_linux_mac.sh
+   ./scripts/install_linux_mac.sh
+   ```
+2. Enter your TV's IP address when prompted.
 
 ### Restore Stock Google TV:
-Changed your mind? Run `scripts/restore_stock_google_tv.bat` anytime to restore the factory launcher and system services.
+Changed your mind? Restore factory settings and original launcher anytime in 1 click:
+- **Windows:** `scripts/restore_stock_google_tv.bat`
+- **macOS / Linux:** `chmod +x scripts/restore_linux_mac.sh && ./scripts/restore_linux_mac.sh`
 
 ---
 

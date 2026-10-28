@@ -73,6 +73,7 @@ public class MainActivity extends Activity {
     private static final String KEY_DOCK_LIST = "dock_packages_list";
     private static final String KEY_GRID_LIST = "custom_grid_packages_list";
     private static final String KEY_HIDDEN_PACKAGES = "hidden_packages_set";
+    private static final String KEY_HIDDEN_INPUTS = "hidden_inputs_set";
 
     // Reorder Mode ("Hold OK to Move")
     private boolean isReorderMode = false;
@@ -106,11 +107,13 @@ public class MainActivity extends Activity {
     private Button btnSettings;
     private Button btnManageApps;
     private View viewAmbientGlow;
+    private View viewGridDimmer;
     private TextView tvActiveDockTitle;
     private TextView tvActiveDockSubtitle;
     private LinearLayout dockContainer;
     private GridLayout appsGrid;
     private LinearLayout dropdownInputs;
+    private Button btnRestoreInputs;
 
     // Siri Voice Assistant Views and Logic
     private Button btnSiri;
@@ -279,11 +282,13 @@ public class MainActivity extends Activity {
             });
         }
         viewAmbientGlow = findViewById(R.id.view_ambient_glow);
+        viewGridDimmer = findViewById(R.id.view_grid_dimmer);
         tvActiveDockTitle = findViewById(R.id.tv_active_dock_title);
         tvActiveDockSubtitle = findViewById(R.id.tv_active_dock_subtitle);
         dockContainer = findViewById(R.id.dock_container);
         appsGrid = findViewById(R.id.apps_grid);
         dropdownInputs = findViewById(R.id.dropdown_inputs);
+        btnRestoreInputs = findViewById(R.id.item_restore_inputs);
 
         // Screensaver views
         screensaverOverlay = findViewById(R.id.screensaver_overlay);
@@ -405,15 +410,19 @@ public class MainActivity extends Activity {
     }
 
     private void fetchWeatherAsync() {
+        fetchWeatherAsync(false);
+    }
+
+    private void fetchWeatherAsync(final boolean force) {
         // Show cached weather immediately
-        SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        final SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
         String cached = prefs.getString("cached_weather", null);
         if (cached != null && tvWeather != null) {
             tvWeather.setText(cached);
         }
 
         long now = System.currentTimeMillis();
-        if (now - lastWeatherFetchTime < 20 * 60 * 1000L) {
+        if (!force && (now - lastWeatherFetchTime < 20 * 60 * 1000L)) {
             return;
         }
 
@@ -424,7 +433,7 @@ public class MainActivity extends Activity {
                     String cityName = prefs.getString("weather_city_name", "LISBOA");
                     String latStr = prefs.getString("weather_lat", "38.7223");
                     String lonStr = prefs.getString("weather_lon", "-9.1393");
-                    URL url = new URL("https://api.open-meteo.com/v1/forecast?latitude=" + latStr + "&longitude=" + lonStr + "&current=temperature_2m,weather_code");
+                    URL url = new URL("https://api.open-meteo.com/v1/forecast?latitude=" + latStr + "&longitude=" + lonStr + "&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m&daily=temperature_2m_max,temperature_2m_min,weather_code&timezone=auto");
                     HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                     conn.setConnectTimeout(6000);
                     conn.setReadTimeout(6000);
@@ -441,13 +450,37 @@ public class MainActivity extends Activity {
                         JSONObject root = new JSONObject(sb.toString());
                         JSONObject current = root.getJSONObject("current");
                         double temp = current.getDouble("temperature_2m");
+                        double feelsLike = current.optDouble("apparent_temperature", temp);
+                        int humidity = current.optInt("relative_humidity_2m", 0);
+                        double wind = current.optDouble("wind_speed_10m", 0.0);
                         int code = current.getInt("weather_code");
 
+                        double max = temp;
+                        double min = temp;
+                        if (root.has("daily")) {
+                            JSONObject daily = root.getJSONObject("daily");
+                            if (daily.has("temperature_2m_max") && daily.getJSONArray("temperature_2m_max").length() > 0) {
+                                max = daily.getJSONArray("temperature_2m_max").getDouble(0);
+                            }
+                            if (daily.has("temperature_2m_min") && daily.getJSONArray("temperature_2m_min").length() > 0) {
+                                min = daily.getJSONArray("temperature_2m_min").getDouble(0);
+                            }
+                        }
+
                         String icon = getWeatherIcon(code);
-                        final String weatherText = String.format(Locale.getDefault(), "•  %.0f°C %s %s", temp, icon, cityName);
+                        final String weatherText = String.format(Locale.getDefault(), "%s  %.0f°C  %s", icon, temp, cityName);
 
                         lastWeatherFetchTime = System.currentTimeMillis();
-                        prefs.edit().putString("cached_weather", weatherText).apply();
+                        prefs.edit()
+                            .putString("cached_weather", weatherText)
+                            .putFloat("weather_temp", (float) temp)
+                            .putFloat("weather_feels", (float) feelsLike)
+                            .putInt("weather_humidity", humidity)
+                            .putFloat("weather_wind", (float) wind)
+                            .putInt("weather_code", code)
+                            .putFloat("weather_max", (float) max)
+                            .putFloat("weather_min", (float) min)
+                            .apply();
 
                         handler.post(new Runnable() {
                             @Override
@@ -464,6 +497,122 @@ public class MainActivity extends Activity {
                 }
             }
         }).start();
+    }
+
+    private String getWeatherDescription(int code) {
+        switch (code) {
+            case 0: return "Céu limpo";
+            case 1: return "Predominantemente limpo";
+            case 2: return "Parcialmente nublado";
+            case 3: return "Nublado";
+            case 45: case 48: return "Nevoeiro";
+            case 51: case 53: case 55: return "Chuviscos";
+            case 61: case 63: case 65: return "Chuva moderada";
+            case 80: case 81: case 82: return "Aguaceiros";
+            case 71: case 73: case 75: return "Neve";
+            case 95: case 96: case 99: return "Trovoada";
+            default: return "Tempo estável";
+        }
+    }
+
+    private void showWeatherDetailsDialog() {
+        SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        String cityName = prefs.getString("weather_city_name", "LISBOA");
+        float temp = prefs.getFloat("weather_temp", -99f);
+        float feels = prefs.getFloat("weather_feels", -99f);
+        int humidity = prefs.getInt("weather_humidity", -1);
+        float wind = prefs.getFloat("weather_wind", -1f);
+        int code = prefs.getInt("weather_code", 0);
+        float max = prefs.getFloat("weather_max", -99f);
+        float min = prefs.getFloat("weather_min", -99f);
+
+        String icon = getWeatherIcon(code);
+        String desc = getWeatherDescription(code);
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_Alert);
+        builder.setTitle("🌤️ Apple Weather · " + cityName);
+
+        StringBuilder sb = new StringBuilder();
+        if (temp != -99f) {
+            sb.append(String.format(Locale.getDefault(), "%s %s (%.1fºC)\n\n", icon, desc, temp));
+            if (feels != -99f) {
+                sb.append(String.format(Locale.getDefault(), "🌡️ Sensação Térmica: %.1fºC\n", feels));
+            }
+            if (max != -99f && min != -99f) {
+                sb.append(String.format(Locale.getDefault(), "📈 Máxima: %.0fºC  ·  📉 Mínima: %.0fºC\n", max, min));
+            }
+            if (humidity >= 0) {
+                sb.append(String.format(Locale.getDefault(), "💧 Humidade do Ar: %d%%\n", humidity));
+            }
+            if (wind >= 0) {
+                sb.append(String.format(Locale.getDefault(), "💨 Velocidade do Vento: %.1f km/h\n", wind));
+            }
+        } else {
+            sb.append("A carregar previsões meteorológicas em tempo real...");
+        }
+
+        builder.setMessage(sb.toString().trim());
+
+        builder.setPositiveButton("🔄 Atualizar", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                Toast.makeText(MainActivity.this, "A atualizar meteorologia...", Toast.LENGTH_SHORT).show();
+                fetchWeatherAsync(true);
+            }
+        });
+
+        builder.setNeutralButton("📍 Mudar Cidade", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                showChangeCityDialog();
+            }
+        });
+
+        builder.setNegativeButton("Fechar", null);
+        AlertDialog dialog = builder.create();
+        dialog.show();
+    }
+
+    private void showChangeCityDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_Alert);
+        builder.setTitle("Selecionar Localização");
+
+        final String[] cities = new String[]{
+            "Lisboa", "Porto", "Braga", "Coimbra", "Faro",
+            "Funchal (Madeira)", "Ponta Delgada (Açores)",
+            "Madrid", "Paris", "Londres", "São Paulo"
+        };
+        final String[] lats = new String[]{
+            "38.7223", "41.1579", "41.5454", "40.2033", "37.0194",
+            "32.6669", "37.7412",
+            "40.4168", "48.8566", "51.5074", "-23.5505"
+        };
+        final String[] lons = new String[]{
+            "-9.1393", "-8.6291", "-8.4265", "-8.4103", "-7.9322",
+            "-16.9241", "-25.6756",
+            "-3.7038", "2.3522", "-0.1278", "-46.6333"
+        };
+
+        builder.setItems(cities, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                if (which >= 0 && which < cities.length) {
+                    String chosenCity = cities[which].split(" ")[0].toUpperCase();
+                    SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+                    prefs.edit()
+                        .putString("weather_city_name", chosenCity)
+                        .putString("weather_lat", lats[which])
+                        .putString("weather_lon", lons[which])
+                        .apply();
+                    Toast.makeText(MainActivity.this, "Cidade alterada para " + cities[which], Toast.LENGTH_SHORT).show();
+                    fetchWeatherAsync(true);
+                }
+            }
+        });
+
+        builder.setNegativeButton("Cancelar", null);
+        AlertDialog dialog = builder.create();
+        dialog.show();
     }
 
     private String getWeatherIcon(int code) {
@@ -823,6 +972,30 @@ public class MainActivity extends Activity {
     }
 
     private void setupPills() {
+        // Weather Interactive Pill
+        if (tvWeather != null) {
+            tvWeather.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    showWeatherDetailsDialog();
+                }
+            });
+            tvWeather.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+                @Override
+                public void onFocusChange(View v, boolean hasFocus) {
+                    if (hasFocus) {
+                        playNavSound();
+                        v.animate().scaleX(1.08f).scaleY(1.08f).setDuration(150).start();
+                        if (viewGridDimmer != null) {
+                            viewGridDimmer.animate().alpha(0.0f).setDuration(250).start();
+                        }
+                    } else {
+                        v.animate().scaleX(1.0f).scaleY(1.0f).setDuration(150).start();
+                    }
+                }
+            });
+        }
+
         // Sleep Timer Pill
         if (btnSleep != null) {
             updateSleepPillText();
@@ -868,6 +1041,13 @@ public class MainActivity extends Activity {
             public void onFocusChange(View v, boolean hasFocus) {
                 if (hasFocus) {
                     playNavSound();
+                    if (viewGridDimmer != null) {
+                        if (v == btnManageApps) {
+                            viewGridDimmer.animate().alpha(0.85f).setDuration(250).start();
+                        } else {
+                            viewGridDimmer.animate().alpha(0.0f).setDuration(250).start();
+                        }
+                    }
                 }
             }
         };
@@ -895,6 +1075,29 @@ public class MainActivity extends Activity {
         } catch (Exception ignored) {
         }
         btnWifi.setText("Wi-Fi");
+    }
+
+    private void openBluetoothSettings() {
+        try {
+            Intent intent = new Intent(Settings.ACTION_BLUETOOTH_SETTINGS);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(intent);
+        } catch (Exception e1) {
+            try {
+                Intent intent = new Intent();
+                intent.setComponent(new android.content.ComponentName("com.android.tv.settings", "com.android.tv.settings.connectivity.BluetoothSettingsActivity"));
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(intent);
+            } catch (Exception e2) {
+                try {
+                    Intent intent = new Intent("android.settings.BLUETOOTH_SETTINGS");
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    startActivity(intent);
+                } catch (Exception e3) {
+                    openSettingsFallback();
+                }
+            }
+        }
     }
 
     private void openSettingsFallback() {
@@ -941,6 +1144,22 @@ public class MainActivity extends Activity {
             @Override
             public void run() {
                 startScreensaver();
+            }
+        });
+
+        options.add("🎧 Auscultadores & Bluetooth (Comandos / Áudio)");
+        actions.add(new Runnable() {
+            @Override
+            public void run() {
+                openBluetoothSettings();
+            }
+        });
+
+        options.add("👁️ Gerir Aplicações Ocultadas (" + getHiddenPackages().size() + ")");
+        actions.add(new Runnable() {
+            @Override
+            public void run() {
+                showHiddenAppsDialog();
             }
         });
 
@@ -1621,6 +1840,9 @@ public class MainActivity extends Activity {
                         updateDockTitleAndGlow(item);
                         // Return completely to clean 100% scenic landscape at (0, 0)
                         mainScroll.smoothScrollTo(0, 0);
+                        if (viewGridDimmer != null) {
+                            viewGridDimmer.animate().alpha(0.0f).setDuration(250).start();
+                        }
                     } else {
                         frame.animate().scaleX(1.0f).scaleY(1.0f).setDuration(120).start();
                     }
@@ -1678,6 +1900,9 @@ public class MainActivity extends Activity {
                         });
                         viewAmbientGlow.setBackground(glow);
                         mainScroll.smoothScrollTo(0, 0);
+                        if (viewGridDimmer != null) {
+                            viewGridDimmer.animate().alpha(0.0f).setDuration(250).start();
+                        }
                     } else {
                         addFrame.animate().scaleX(1.0f).scaleY(1.0f).setDuration(120).start();
                     }
@@ -2127,6 +2352,9 @@ public class MainActivity extends Activity {
                         playNavSound();
                         frame.animate().scaleX(1.06f).scaleY(1.06f).setDuration(180).start();
                         label.animate().alpha(1.0f).setDuration(180).start();
+                        if (viewGridDimmer != null) {
+                            viewGridDimmer.animate().alpha(0.85f).setDuration(250).start();
+                        }
 
                         // Smoothly scroll grid into viewing range
                         int[] location = new int[2];
@@ -2336,6 +2564,16 @@ public class MainActivity extends Activity {
                     unhidePackage(restored.packageName);
                     Toast.makeText(MainActivity.this, restored.label + " restaurada", Toast.LENGTH_SHORT).show();
                 }
+            }
+        });
+
+        builder.setPositiveButton("Restaurar Todas", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                getSharedPreferences(PREFS_NAME, MODE_PRIVATE).edit()
+                    .remove(KEY_HIDDEN_PACKAGES).apply();
+                reloadAll();
+                Toast.makeText(MainActivity.this, "Todas as aplicações foram restauradas", Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -2608,6 +2846,9 @@ public class MainActivity extends Activity {
             // If in apps grid, scroll back up to 0,0 and focus dock
             if (mainScroll.getScrollY() > 50) {
                 mainScroll.smoothScrollTo(0, 0);
+                if (viewGridDimmer != null) {
+                    viewGridDimmer.animate().alpha(0.0f).setDuration(250).start();
+                }
                 View dockView = findViewById(500 + lastFocusedDockIndex);
                 if (dockView == null && dockContainer != null && dockContainer.getChildCount() > 0) {
                     dockView = dockContainer.getChildAt(0);

@@ -27,6 +27,14 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
+    <!-- Dynamic Scrim Dimmer when scrolling into Apps Grid (tvOS Parallax Scrim) -->
+    <View
+        android:id="@+id/view_grid_dimmer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#A6000000"
+        android:alpha="0" />
+
     <!-- Scrollable container for Dock and App Grid -->
     <ScrollView
         android:id="@+id/main_scroll"
@@ -81,17 +89,26 @@
                             android:letterSpacing="0.22"
                             android:textStyle="bold" />
 
-                        <!-- Weather Widget -->
+                        <!-- Weather Widget (Interactive Frosted Pill) -->
                         <TextView
                             android:id="@+id/tv_weather"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="12dp"
                             android:text="•  --°C  LISBOA"
-                            android:textColor="#8E8E93"
+                            android:textColor="#A0A0A5"
                             android:textSize="11sp"
                             android:letterSpacing="0.16"
-                            android:textStyle="bold" />
+                            android:textStyle="bold"
+                            android:focusable="true"
+                            android:clickable="true"
+                            android:background="@drawable/dropdown_item_bg"
+                            android:paddingStart="8dp"
+                            android:paddingEnd="8dp"
+                            android:paddingTop="3dp"
+                            android:paddingBottom="3dp"
+                            android:nextFocusDown="@id/dock_item_1"
+                            android:nextFocusRight="@id/btn_sleep" />
                     </LinearLayout>
 
                     <!-- Bottom Row: Clock | Divider | Date -->
@@ -157,6 +174,7 @@
                         android:paddingStart="16dp"
                         android:paddingEnd="18dp"
                         android:focusable="true"
+                        android:nextFocusLeft="@id/tv_weather"
                         android:nextFocusDown="@id/dock_item_1" />
 
                     <!-- Inputs Pill -->
@@ -425,6 +443,20 @@
             android:textColor="@color/dropdown_item_text"
             android:textSize="13sp"
             android:focusable="true" />
+
+        <Button
+            android:id="@+id/item_restore_inputs"
+            android:layout_width="match_parent"
+            android:layout_height="36dp"
+            android:layout_marginTop="4dp"
+            android:background="@drawable/dropdown_item_bg"
+            android:gravity="center_vertical|start"
+            android:paddingStart="12dp"
+            android:text="Restaurar Entradas Ocultas"
+            android:textColor="#34C759"
+            android:textSize="12sp"
+            android:focusable="true"
+            android:visibility="gone" />
     </LinearLayout>
 
     <!-- Full-screen Apple TV Aerial Screensaver Overlay -->
