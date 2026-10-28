@@ -13,7 +13,9 @@
         android:id="@+id/tile_frame"
         android:layout_width="114dp"
         android:layout_height="64dp"
-        android:background="@drawable/tile_focus_glass"
+        android:outlineProvider="background"
+        android:clipToOutline="true"
+        android:background="@drawable/tile_card_base"
         android:focusable="true">
 
         <ImageView
@@ -21,6 +23,14 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:scaleType="centerCrop" />
+
+        <!-- Specular Focus Border Overlay (drawn OVER the banner so the white ring is never hidden) -->
+        <View
+            android:id="@+id/tile_focus_stroke"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/tile_focus_overlay"
+            android:duplicateParentState="true" />
     </FrameLayout>
 
     <!-- Label is hidden (alpha=0) by default; smoothly fades in on focus -->

@@ -234,6 +234,7 @@ public class MainActivity extends Activity {
         registerReceiver(siriReceiver, siriFilter);
 
         Intent startIntent = getIntent();
+        applyWeatherIntentExtras(startIntent);
         if (startIntent != null && (Intent.ACTION_ASSIST.equals(startIntent.getAction()) ||
                 "android.intent.action.VOICE_ASSIST".equals(startIntent.getAction()) ||
                 Intent.ACTION_SEARCH.equals(startIntent.getAction()) ||
@@ -259,6 +260,37 @@ public class MainActivity extends Activity {
         }, 300);
 
         resetInactivityTimer();
+    }
+
+    private void applyWeatherIntentExtras(Intent intent) {
+        if (intent != null && intent.hasExtra("SET_WEATHER_CITY")) {
+            String city = intent.getStringExtra("SET_WEATHER_CITY");
+            String lat = intent.getStringExtra("SET_WEATHER_LAT");
+            String lon = intent.getStringExtra("SET_WEATHER_LON");
+            if (city != null) {
+                try {
+                    city = java.net.URLDecoder.decode(city, "UTF-8");
+                } catch (Exception ignored) {}
+                city = city.replace("ÃfO", "ÃO").replace("ÃƒO", "ÃO").replace("Ã£o", "ão").replace("Ã\u0083O", "ÃO");
+                try {
+                    if (city.contains("Ã") || city.contains("â")) {
+                        byte[] isoBytes = city.getBytes(java.nio.charset.StandardCharsets.ISO_8859_1);
+                        String candidate = new String(isoBytes, java.nio.charset.StandardCharsets.UTF_8);
+                        if (!candidate.contains("\uFFFD")) {
+                            city = candidate;
+                        }
+                    }
+                } catch (Exception ignored) {}
+            }
+            SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+            SharedPreferences.Editor editor = prefs.edit();
+            if (city != null) editor.putString("weather_city_name", city);
+            if (lat != null) editor.putString("weather_lat", lat);
+            if (lon != null) editor.putString("weather_lon", lon);
+            editor.remove("cached_weather");
+            editor.apply();
+            fetchWeatherAsync(true);
+        }
     }
 
     private void initViews() {
@@ -2310,6 +2342,8 @@ public class MainActivity extends Activity {
             final FrameLayout frame = tileView.findViewById(R.id.tile_frame);
             ImageView icon = tileView.findViewById(R.id.tile_icon);
             final TextView label = tileView.findViewById(R.id.tile_label);
+            frame.setClipToOutline(true);
+            icon.setClipToOutline(true);
 
             if (outfitRegular != null) label.setTypeface(outfitRegular);
             label.setText(item.label);
@@ -2886,6 +2920,7 @@ public class MainActivity extends Activity {
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
         setIntent(intent);
+        applyWeatherIntentExtras(intent);
         if (intent != null && intent.getBooleanExtra("ACTION_OPEN_INPUTS", false)) {
             toggleInputsDropdown();
         }

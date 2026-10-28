@@ -5,7 +5,9 @@
     android:layout_height="63dp"
     android:layout_margin="5dp"
     android:focusable="true"
-    android:background="@drawable/tile_focus_glass">
+    android:outlineProvider="background"
+    android:clipToOutline="true"
+    android:background="@drawable/tile_card_base">
 
     <TextView
         android:id="@+id/dock_add_icon"
@@ -16,4 +18,10 @@
         android:textColor="#A0FFFFFF"
         android:textSize="26sp"
         android:includeFontPadding="false" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/tile_focus_overlay"
+        android:duplicateParentState="true" />
 </FrameLayout>
