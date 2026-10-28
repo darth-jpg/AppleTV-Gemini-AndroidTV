@@ -39,8 +39,13 @@
 ## ✨ Key Features
 
 1. **Pure tvOS Aesthetics & Fluid Physics:**
-   - Translucent floating dock with real-time focus elevation, smooth magnification, and D-pad navigation.
+   - **Frosted Glass Dock Band:** Translucent frosted glass capsule anchoring the dock to the bottom with subtle specular edge sheen.
+   - **Cinematic Top Shelf:** Dynamic typography with large title, category badges (*Streaming & Séries, Cloud Gaming, Vídeo & Música*), and ambient radial glow.
+   - **Specular Focus Sheen:** Refined 3D liquid glass focus highlight with smooth 1.06x elevation on active apps.
+   - **Uniform Squircle Icon Balancing:** Automatic aspect-ratio centering for 1:1 square app icons inside glass cards.
    - **Interactive "Hold OK to Move" App Reordering:** Hold the remote OK button on any Dock or Grid tile to enter reorder mode. Use remote D-pad arrows to freely reposition apps horizontally and vertically; press OK or Back to lock in place. Order is permanently remembered.
+   - **tvOS Control Center & Quick Restart:** Integrated system menu on the Settings pill with 1-click TV reboot, sleep timer, screensaver trigger, and sound mode switcher.
+   - **Customizable HDMI Inputs:** Real-time port renaming (*PlayStation 5, Xbox, Nintendo Switch, PC Gamer, Apple TV*) with long-press customization.
    - Dynamic top bar with Sleep Timer, HDMI Inputs switcher, Wi-Fi status, and Settings.
    - Dynamic real-time weather widget (powered by Open-Meteo, zero API keys required).
 
@@ -81,6 +86,27 @@ Want to adapt this project to your specific TV model (TCL, Sony, Xiaomi, Philips
 
 ### Restore Stock Google TV:
 Changed your mind? Run `scripts/restore_stock_google_tv.bat` anytime to restore the factory launcher and system services.
+
+---
+
+## 📺 What if your TV runs Samsung Tizen, LG webOS, or Roku?
+
+This launcher is built natively for **Android TV & Google TV** (TCL, Sony, Xiaomi, Philips, Hisense, Chromecast, Nvidia Shield, Fire TV). 
+
+If you own a TV running a closed proprietary OS (**Samsung Tizen**, **LG webOS**, or **Roku**), you cannot install Android APKs directly, but you can achieve a clean, ad-free experience using these settings:
+
+### 1. Samsung Smart TV (Tizen OS):
+- **Disable ACR & Tracking:** *Settings -> General -> Privacy & Terms -> Turn off "Viewing Information Services" and "Interest-Based Advertising"*.
+- **Hide Samsung TV Plus:** *Hover over the TV Plus icon in the home bar -> Press Down -> Select "Remove" -> Disable*.
+- **Router DNS Ad-Block (NextDNS / Pi-hole):** Block `ads.samsung.com` and `samsungadhub.com`.
+
+### 2. LG Smart TV (webOS):
+- **Disable Screen Tracking (ACR):** *Settings -> General -> System -> Additional Settings -> Turn off "Live Plus"*.
+- **Turn off Home Ads & Autoplay:** *Settings -> General -> System -> Additional Settings -> Home Settings -> Turn off "Home Promotion" and "Home Auto Launch"*.
+- **Router DNS Ad-Block:** Block `ad.lgsmartad.com` and `ngfts.lge.com`.
+
+### 3. Roku TV:
+- **Limit Tracking:** *Settings -> Privacy -> Advertising -> Check "Limit ad tracking"*.
 
 ---
 

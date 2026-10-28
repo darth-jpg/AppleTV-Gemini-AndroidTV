@@ -23,6 +23,7 @@ import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.PowerManager;
 import android.provider.Settings;
 import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
@@ -106,6 +107,7 @@ public class MainActivity extends Activity {
     private Button btnManageApps;
     private View viewAmbientGlow;
     private TextView tvActiveDockTitle;
+    private TextView tvActiveDockSubtitle;
     private LinearLayout dockContainer;
     private GridLayout appsGrid;
     private LinearLayout dropdownInputs;
@@ -278,6 +280,7 @@ public class MainActivity extends Activity {
         }
         viewAmbientGlow = findViewById(R.id.view_ambient_glow);
         tvActiveDockTitle = findViewById(R.id.tv_active_dock_title);
+        tvActiveDockSubtitle = findViewById(R.id.tv_active_dock_subtitle);
         dockContainer = findViewById(R.id.dock_container);
         appsGrid = findViewById(R.id.apps_grid);
         dropdownInputs = findViewById(R.id.dropdown_inputs);
@@ -322,6 +325,7 @@ public class MainActivity extends Activity {
             tvDate.setTypeface(outfitRegular);
             if (tvWeather != null) tvWeather.setTypeface(outfitRegular);
             tvActiveDockTitle.setTypeface(outfitRegular);
+            if (tvActiveDockSubtitle != null) tvActiveDockSubtitle.setTypeface(outfitRegular);
 
             if (btnSiri != null) btnSiri.setTypeface(outfitRegular);
             if (btnSleep != null) btnSleep.setTypeface(outfitRegular);
@@ -847,7 +851,7 @@ public class MainActivity extends Activity {
         btnSettings.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                openSettingsFallback();
+                showSettingsControlMenu();
             }
         });
 
@@ -909,6 +913,162 @@ public class MainActivity extends Activity {
         }
     }
 
+    private void showSettingsControlMenu() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_Alert);
+        builder.setTitle("Centro de Controlo & Definições");
+
+        final List<String> options = new ArrayList<>();
+        final List<Runnable> actions = new ArrayList<>();
+
+        options.add("⚙️ Definições do Sistema Android TV");
+        actions.add(new Runnable() {
+            @Override
+            public void run() {
+                openSettingsFallback();
+            }
+        });
+
+        options.add("⏱️ Temporizador de Desligar (Sleep Timer)");
+        actions.add(new Runnable() {
+            @Override
+            public void run() {
+                showSleepTimerDialog();
+            }
+        });
+
+        options.add("🖼️ Protetor de Ecrã Apple TV Aerials");
+        actions.add(new Runnable() {
+            @Override
+            public void run() {
+                startScreensaver();
+            }
+        });
+
+        options.add("🔊 Efeitos Sonoros de Navegação");
+        actions.add(new Runnable() {
+            @Override
+            public void run() {
+                showSoundOptionsDialog();
+            }
+        });
+
+        options.add("🔄 Reiniciar Televisão");
+        actions.add(new Runnable() {
+            @Override
+            public void run() {
+                confirmRestartTv();
+            }
+        });
+
+        builder.setItems(options.toArray(new String[0]), new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                if (which >= 0 && which < actions.size()) {
+                    actions.get(which).run();
+                }
+            }
+        });
+
+        builder.setNegativeButton("Fechar", null);
+        AlertDialog dialog = builder.create();
+        dialog.show();
+    }
+
+    private void confirmRestartTv() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_Alert);
+        builder.setTitle("Reiniciar Televisão");
+        builder.setMessage("Tem a certeza que deseja reiniciar o sistema agora?");
+        builder.setPositiveButton("Reiniciar", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                restartDevice();
+            }
+        });
+        builder.setNegativeButton("Cancelar", null);
+        AlertDialog dialog = builder.create();
+        dialog.show();
+    }
+
+    private void restartDevice() {
+        if (RemoteKeyService.instance != null) {
+            try {
+                boolean success = RemoteKeyService.instance.performGlobalAction(android.accessibilityservice.AccessibilityService.GLOBAL_ACTION_POWER_DIALOG);
+                if (success) return;
+            } catch (Exception ignored) {
+            }
+        }
+        try {
+            PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+            if (pm != null) {
+                pm.reboot(null);
+                return;
+            }
+        } catch (Exception ignored) {
+        }
+        try {
+            Intent intent = new Intent("android.intent.action.REBOOT");
+            intent.putExtra("nowait", 1);
+            intent.putExtra("interval", 1);
+            intent.putExtra("window", 0);
+            sendBroadcast(intent);
+        } catch (Exception e) {
+            Toast.makeText(this, "Não foi possível reiniciar automaticamente. Use o comando da TV.", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private static final String KEY_INPUT_NAME_PREFIX = "input_name_";
+
+    private String getInputDisplayName(String key, String fallback) {
+        SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        return prefs.getString(KEY_INPUT_NAME_PREFIX + key, fallback);
+    }
+
+    private void saveInputDisplayName(String key, String name) {
+        SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        prefs.edit().putString(KEY_INPUT_NAME_PREFIX + key, name).apply();
+    }
+
+    private void updateInputLabels() {
+        Button btn1 = findViewById(R.id.item_input_hdmi1);
+        if (btn1 != null) btn1.setText(getInputDisplayName("hdmi1", "HDMI 1"));
+        Button btn2 = findViewById(R.id.item_input_hdmi2);
+        if (btn2 != null) btn2.setText(getInputDisplayName("hdmi2", "HDMI 2"));
+        Button btn3 = findViewById(R.id.item_input_hdmi3);
+        if (btn3 != null) btn3.setText(getInputDisplayName("hdmi3", "HDMI 3"));
+    }
+
+    private void showRenameInputDialog(final String key, final String fallback) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_Alert);
+        builder.setTitle("Personalizar Entrada (" + fallback + ")");
+
+        final String[] presets = new String[]{
+            "🎮 PlayStation 5",
+            "🎮 Xbox Series X/S",
+            "🎮 Nintendo Switch",
+            "💻 PC Gamer / Steam",
+            "🍏 Apple TV 4K",
+            "📺 Box TV / Operadora",
+            "🔄 Repor Nome de Fábrica (" + fallback + ")"
+        };
+
+        builder.setItems(presets, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                if (which == presets.length - 1) {
+                    saveInputDisplayName(key, fallback);
+                } else {
+                    saveInputDisplayName(key, presets[which]);
+                }
+                updateInputLabels();
+                Toast.makeText(MainActivity.this, "Nome da entrada atualizado", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        builder.setNegativeButton("Cancelar", null);
+        AlertDialog dialog = builder.create();
+        dialog.show();
+    }
+
     private void setupInputsDropdown() {
         View.OnFocusChangeListener soundFocusListener = new View.OnFocusChangeListener() {
             @Override
@@ -932,6 +1092,23 @@ public class MainActivity extends Activity {
                 view.setOnFocusChangeListener(soundFocusListener);
             }
         }
+
+        updateInputLabels();
+
+        final View.OnLongClickListener renameListener = new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                int id = v.getId();
+                if (id == R.id.item_input_hdmi1) showRenameInputDialog("hdmi1", "HDMI 1");
+                else if (id == R.id.item_input_hdmi2) showRenameInputDialog("hdmi2", "HDMI 2");
+                else if (id == R.id.item_input_hdmi3) showRenameInputDialog("hdmi3", "HDMI 3");
+                return true;
+            }
+        };
+
+        findViewById(R.id.item_input_hdmi1).setOnLongClickListener(renameListener);
+        findViewById(R.id.item_input_hdmi2).setOnLongClickListener(renameListener);
+        findViewById(R.id.item_input_hdmi3).setOnLongClickListener(renameListener);
 
         findViewById(R.id.item_input_hdmi1).setOnClickListener(new View.OnClickListener() {
             @Override
@@ -974,6 +1151,7 @@ public class MainActivity extends Activity {
         if (dropdownInputs.getVisibility() == View.VISIBLE) {
             hideInputsDropdown();
         } else {
+            updateInputLabels();
             dropdownInputs.setVisibility(View.VISIBLE);
             View first = findViewById(R.id.item_input_hdmi1);
             if (first != null) first.requestFocus();
@@ -1399,8 +1577,21 @@ public class MainActivity extends Activity {
 
             if (item.banner != null) {
                 img.setImageDrawable(item.banner);
+                int w = item.banner.getIntrinsicWidth();
+                int h = item.banner.getIntrinsicHeight();
+                if (w > 0 && h > 0 && ((float) w / (float) h) < 1.35f) {
+                    img.setScaleType(ImageView.ScaleType.FIT_CENTER);
+                    int pad = (int) (8 * getResources().getDisplayMetrics().density);
+                    img.setPadding(pad, pad, pad, pad);
+                } else {
+                    img.setScaleType(ImageView.ScaleType.CENTER_CROP);
+                    img.setPadding(0, 0, 0, 0);
+                }
             } else {
                 img.setImageResource(android.R.drawable.sym_def_app_icon);
+                img.setScaleType(ImageView.ScaleType.FIT_CENTER);
+                int pad = (int) (10 * getResources().getDisplayMetrics().density);
+                img.setPadding(pad, pad, pad, pad);
             }
 
             int pillIndex = Math.min(i, topPillIds.length - 1);
@@ -1471,6 +1662,9 @@ public class MainActivity extends Activity {
                         playNavSound();
                         addFrame.animate().scaleX(1.06f).scaleY(1.06f).setDuration(180).start();
                         tvActiveDockTitle.setText("Adicionar à Dock");
+                        if (tvActiveDockSubtitle != null) {
+                            tvActiveDockSubtitle.setText("PERSONALIZAR ATALHOS");
+                        }
 
                         // Gentle soft ambient glow for add button
                         GradientDrawable glow = new GradientDrawable();
@@ -1835,17 +2029,45 @@ public class MainActivity extends Activity {
         dialog.show();
     }
 
+    private String getAppCategorySubtitle(String pkg) {
+        if (pkg == null) return "APLICAÇÃO";
+        String lower = pkg.toLowerCase();
+        if (lower.contains("netflix") || lower.contains("plex") || lower.contains("wbd") ||
+            lower.contains("amazonvideo") || lower.contains("stremio") || lower.contains("disney") ||
+            lower.contains("hbo") || lower.contains("max") || lower.contains("apple")) {
+            return "STREAMING & SÉRIES";
+        }
+        if (lower.contains("youtube") || lower.contains("smarttube") || lower.contains("spotify") ||
+            lower.contains("tidal") || lower.contains("music") || lower.contains("audio")) {
+            return "VÍDEO & MÚSICA";
+        }
+        if (lower.contains("steam") || lower.contains("moonlight") || lower.contains("luna") ||
+            lower.contains("geforce") || lower.contains("game") || lower.contains("retroarch")) {
+            return "CLOUD GAMING & JOGOS";
+        }
+        if (lower.contains("browser") || lower.contains("chrome") || lower.contains("internet")) {
+            return "NAVEGADOR & WEB";
+        }
+        if (lower.contains("settings") || lower.contains("vending") || lower.contains("playstore")) {
+            return "SISTEMA & UTILITÁRIOS";
+        }
+        return "APLICAÇÃO";
+    }
+
     private void updateDockTitleAndGlow(AppItem item) {
         tvActiveDockTitle.setText(item.label);
+        if (tvActiveDockSubtitle != null) {
+            tvActiveDockSubtitle.setText(getAppCategorySubtitle(item.packageName));
+        }
 
         // Full-screen seamless radial ambient glow centered on lowered dock position
         int color = item.glowColor;
         GradientDrawable glow = new GradientDrawable();
         glow.setGradientType(GradientDrawable.RADIAL_GRADIENT);
-        glow.setGradientRadius(1190f);
+        glow.setGradientRadius(1200f);
         glow.setGradientCenter(0.32f, 0.78f);
         glow.setColors(new int[]{
-            Color.argb(22, Color.red(color), Color.green(color), Color.blue(color)),
+            Color.argb(26, Color.red(color), Color.green(color), Color.blue(color)),
             Color.argb(8, Color.red(color), Color.green(color), Color.blue(color)),
             Color.TRANSPARENT
         });
@@ -1868,8 +2090,21 @@ public class MainActivity extends Activity {
             label.setText(item.label);
             if (item.banner != null) {
                 icon.setImageDrawable(item.banner);
+                int w = item.banner.getIntrinsicWidth();
+                int h = item.banner.getIntrinsicHeight();
+                if (w > 0 && h > 0 && ((float) w / (float) h) < 1.35f) {
+                    icon.setScaleType(ImageView.ScaleType.FIT_CENTER);
+                    int pad = (int) (8 * getResources().getDisplayMetrics().density);
+                    icon.setPadding(pad, pad, pad, pad);
+                } else {
+                    icon.setScaleType(ImageView.ScaleType.CENTER_CROP);
+                    icon.setPadding(0, 0, 0, 0);
+                }
             } else {
                 icon.setImageResource(android.R.drawable.sym_def_app_icon);
+                icon.setScaleType(ImageView.ScaleType.FIT_CENTER);
+                int pad = (int) (10 * getResources().getDisplayMetrics().density);
+                icon.setPadding(pad, pad, pad, pad);
             }
 
             frame.setId(1000 + i);
@@ -2299,7 +2534,7 @@ public class MainActivity extends Activity {
                 if (handleMenuButtonOnFocusedView()) {
                     return true;
                 }
-                openSettingsFallback();
+                showSettingsControlMenu();
                 return true;
             }
 
@@ -2307,7 +2542,7 @@ public class MainActivity extends Activity {
             if (keyCode == KeyEvent.KEYCODE_SETTINGS ||
                 keyCode == 176 || keyCode == 312 || keyCode == 4514 || keyCode == 4137 ||
                 scanCode == 233 || scanCode == 234) {
-                openSettingsFallback();
+                showSettingsControlMenu();
                 return true;
             }
 

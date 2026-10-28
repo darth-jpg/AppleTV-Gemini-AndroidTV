@@ -11,8 +11,8 @@
 
     <FrameLayout
         android:id="@+id/tile_frame"
-        android:layout_width="112dp"
-        android:layout_height="63dp"
+        android:layout_width="114dp"
+        android:layout_height="64dp"
         android:background="@drawable/tile_focus_glass"
         android:focusable="true">
 
@@ -28,9 +28,9 @@
         android:id="@+id/tile_label"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="5dp"
+        android:layout_marginTop="6dp"
         android:textColor="@color/white"
-        android:textSize="11sp"
+        android:textSize="12sp"
         android:maxLines="1"
         android:alpha="0"
         android:shadowColor="#CC000000"
