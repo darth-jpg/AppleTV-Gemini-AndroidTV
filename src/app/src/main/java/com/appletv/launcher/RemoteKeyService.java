@@ -148,7 +148,7 @@ public class RemoteKeyService extends AccessibilityService {
             keyCode == 4020 || keyCode == 4184 || scanCode == 456 ||
             keyCode == 4141 || scanCode == 762 ||
             keyCode == 4099 || scanCode == 752 ||
-            keyCode == 4065 ||
+            keyCode == 4065 || keyCode == 288 || keyCode == 188 ||
             keyCode == 4514 || keyCode == 4137 || scanCode == 233 || scanCode == 234 ||
             keyCode == KeyEvent.KEYCODE_SETTINGS || keyCode == KeyEvent.KEYCODE_MENU ||
             keyCode == 312 || keyCode == 176 || keyCode == 82 ||
@@ -199,9 +199,9 @@ public class RemoteKeyService extends AccessibilityService {
                 return true;
             }
 
-            // YouTube button (keycode 4065)
-            if (keyCode == 4065) {
-                launchApp("com.google.android.youtube.tv");
+            // YouTube button remapped to SmartTube (keycode 4065 / 288 / 188)
+            if (keyCode == 4065 || keyCode == 288 || keyCode == 188) {
+                launchApp("org.smarttube.stable");
                 return true;
             }
         }
@@ -234,6 +234,13 @@ public class RemoteKeyService extends AccessibilityService {
             if (intent == null && "com.wbd.stream".equals(pkg)) {
                 intent = new Intent(Intent.ACTION_MAIN);
                 intent.setClassName("com.wbd.stream", "com.wbd.beam.BeamActivity");
+            }
+            if (intent == null && "org.smarttube.stable".equals(pkg)) {
+                intent = new Intent(Intent.ACTION_MAIN);
+                intent.setClassName("org.smarttube.stable", "com.liskovsoft.smartyoutubetv2.tv.ui.main.SplashActivity");
+            }
+            if (intent == null && "org.smarttube.stable".equals(pkg)) {
+                intent = getPackageManager().getLeanbackLaunchIntentForPackage("com.google.android.youtube.tv");
             }
             if (intent == null && "com.google.android.youtube.tv".equals(pkg)) {
                 intent = new Intent(Intent.ACTION_MAIN);

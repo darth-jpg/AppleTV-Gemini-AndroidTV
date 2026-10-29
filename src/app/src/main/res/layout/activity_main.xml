@@ -335,7 +335,7 @@
                     android:layout_alignParentEnd="true"
                     android:layout_centerVertical="true"
                     android:background="@drawable/pill_bg"
-                    android:text="Gerir Apps"
+                    android:text="+ Gerir Apps"
                     android:textColor="@color/pill_text_color"
                     android:textSize="11sp"
                     android:drawableStart="@drawable/ic_settings"

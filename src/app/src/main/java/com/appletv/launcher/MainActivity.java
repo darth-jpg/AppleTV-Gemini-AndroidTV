@@ -1900,57 +1900,6 @@ public class MainActivity extends Activity {
             dockContainer.addView(dockTile);
         }
 
-        // Add "+" button if dock has less than 6 items
-        if (dockItems.size() < 6) {
-            View addTile = inflater.inflate(R.layout.item_dock_add, dockContainer, false);
-            final FrameLayout addFrame = addTile.findViewById(R.id.dock_add_frame);
-            addFrame.setId(R.id.dock_item_add);
-            addFrame.setClipToOutline(true);
-            addFrame.setNextFocusUpId(R.id.btn_settings);
-            addFrame.setNextFocusDownId(R.id.btn_manage_apps);
-
-            addFrame.setOnFocusChangeListener(new View.OnFocusChangeListener() {
-                @Override
-                public void onFocusChange(View v, boolean hasFocus) {
-                    if (hasFocus) {
-                        playNavSound();
-                        addFrame.animate().scaleX(1.06f).scaleY(1.06f).setDuration(180).start();
-                        tvActiveDockTitle.setText("Adicionar à Dock");
-                        if (tvActiveDockSubtitle != null) {
-                            tvActiveDockSubtitle.setText("PERSONALIZAR ATALHOS");
-                        }
-
-                        // Gentle soft ambient glow for add button
-                        GradientDrawable glow = new GradientDrawable();
-                        glow.setGradientType(GradientDrawable.RADIAL_GRADIENT);
-                        glow.setGradientRadius(1190f);
-                        glow.setGradientCenter(0.32f, 0.78f);
-                        glow.setColors(new int[]{
-                            Color.argb(20, 255, 255, 255),
-                            Color.argb(6, 255, 255, 255),
-                            Color.TRANSPARENT
-                        });
-                        viewAmbientGlow.setBackground(glow);
-                        mainScroll.smoothScrollTo(0, 0);
-                        if (viewGridDimmer != null) {
-                            viewGridDimmer.animate().alpha(0.0f).setDuration(250).start();
-                        }
-                    } else {
-                        addFrame.animate().scaleX(1.0f).scaleY(1.0f).setDuration(120).start();
-                    }
-                }
-            });
-
-            addFrame.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    showAddAppToDockDialog();
-                }
-            });
-
-            dockContainer.addView(addTile);
-        }
-
         // Initialize glow with currently selected or first item
         if (!dockItems.isEmpty()) {
             if (lastFocusedDockIndex >= dockItems.size()) lastFocusedDockIndex = 0;
@@ -2536,12 +2485,12 @@ public class MainActivity extends Activity {
         }
 
         final String[] options = new String[]{
+            "➕ Adicionar Aplicação à Dock",
             hiddenOption,
             "🎬 Iniciar Proteção de Ecrã (Apple TV Aerial)",
             "⏱️ Tempo do Screensaver (" + timeoutText + ")",
             "🔊 Sons de Navegação (" + soundModeSummary + ")",
             "🛒 Abrir Google Play Store",
-            "⭐ Adicionar Aplicação à Dock",
             "💡 Dica: Mantém o botão OK premido em qualquer app para opções rápidas"
         };
 
@@ -2549,17 +2498,17 @@ public class MainActivity extends Activity {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 if (which == 0) {
-                    showHiddenAppsDialog();
-                } else if (which == 1) {
-                    startScreensaver();
-                } else if (which == 2) {
-                    showScreensaverTimeoutDialog();
-                } else if (which == 3) {
-                    showSoundOptionsDialog();
-                } else if (which == 4) {
-                    launchPackage("com.android.vending");
-                } else if (which == 5) {
                     showAddAppToDockDialog();
+                } else if (which == 1) {
+                    showHiddenAppsDialog();
+                } else if (which == 2) {
+                    startScreensaver();
+                } else if (which == 3) {
+                    showScreensaverTimeoutDialog();
+                } else if (which == 4) {
+                    showSoundOptionsDialog();
+                } else if (which == 5) {
+                    launchPackage("com.android.vending");
                 }
             }
         });
@@ -2849,8 +2798,8 @@ public class MainActivity extends Activity {
                 return true;
             }
 
-            // YouTube button remapped to SmartTube (keycode 4065)
-            if (keyCode == 4065) {
+            // YouTube button remapped to SmartTube (keycode 4065, 288, 188)
+            if (keyCode == 4065 || keyCode == 288 || keyCode == 188) {
                 launchPackage("org.smarttube.stable");
                 return true;
             }
@@ -2908,7 +2857,10 @@ public class MainActivity extends Activity {
         boolean isMicDown = (keyCode == KeyEvent.KEYCODE_VOICE_ASSIST || keyCode == KeyEvent.KEYCODE_SEARCH || 
                              keyCode == KeyEvent.KEYCODE_ASSIST || keyCode == 231 || keyCode == 219 || keyCode == 84 || 
                              keyCode == 582 || keyCode == 217 || keyCode == 570);
-        if (!isGamepadOrController(event) && (isMicDown || keyCode == 4062 || keyCode == 4020 || keyCode == 4184 || keyCode == 4141 || keyCode == 4099 || keyCode == 4065)) {
+        boolean isAppShortcutDown = (keyCode == 4062 || keyCode == 4020 || keyCode == 4184 || 
+                                     keyCode == 4141 || keyCode == 4099 || keyCode == 4065 || 
+                                     keyCode == 288 || keyCode == 188);
+        if (!isGamepadOrController(event) && (isMicDown || isAppShortcutDown)) {
             return true;
         }
 
