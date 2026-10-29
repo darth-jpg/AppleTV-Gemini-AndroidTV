@@ -11,6 +11,8 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
@@ -35,13 +37,16 @@ import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.DecelerateInterpolator;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.GridLayout;
+import android.widget.HorizontalScrollView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListAdapter;
+import android.widget.ProgressBar;
 import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -114,6 +119,14 @@ public class MainActivity extends Activity {
     private GridLayout appsGrid;
     private LinearLayout dropdownInputs;
     private Button btnRestoreInputs;
+
+    // Watch Next (Continuar a Ver / Up Next) & Frosted Glass
+    private View watchNextSection;
+    private LinearLayout watchNextContainer;
+    private HorizontalScrollView watchNextScroll;
+    private LinearLayout masterDockSection;
+    private List<WatchNextHelper.Item> watchNextItems = new ArrayList<>();
+    private FrostGlassHelper.FrostDrawable dockFrostedDrawable;
 
     // Siri Voice Assistant Views and Logic
     private Button btnSiri;
@@ -221,6 +234,13 @@ public class MainActivity extends Activity {
         setupInputsDropdown();
         reloadAll();
 
+        if (!WatchNextHelper.hasPermission(this)) {
+            try {
+                requestPermissions(new String[] { WatchNextHelper.PERMISSION }, 101);
+            } catch (Throwable ignored) {}
+        }
+        loadWatchNextAsync();
+
         // Register package events receiver
         IntentFilter filter = new IntentFilter();
         filter.addAction(Intent.ACTION_PACKAGE_ADDED);
@@ -321,6 +341,11 @@ public class MainActivity extends Activity {
         appsGrid = findViewById(R.id.apps_grid);
         dropdownInputs = findViewById(R.id.dropdown_inputs);
         btnRestoreInputs = findViewById(R.id.item_restore_inputs);
+
+        watchNextSection = findViewById(R.id.watch_next_section);
+        watchNextContainer = findViewById(R.id.watch_next_container);
+        watchNextScroll = findViewById(R.id.watch_next_scroll);
+        masterDockSection = findViewById(R.id.master_dock_section);
 
         // Screensaver views
         screensaverOverlay = findViewById(R.id.screensaver_overlay);
@@ -433,11 +458,12 @@ public class MainActivity extends Activity {
             resId = R.drawable.wallpaper_night;
         }
 
-        if (currentWallpaperResId != resId) {
+        if (currentWallpaperResId != resId || dockFrostedDrawable == null) {
             currentWallpaperResId = resId;
             if (ivWallpaper != null) {
                 ivWallpaper.setImageResource(resId);
             }
+            updateFrostedDockGlass(resId);
         }
     }
 
@@ -1017,12 +1043,12 @@ public class MainActivity extends Activity {
                 public void onFocusChange(View v, boolean hasFocus) {
                     if (hasFocus) {
                         playNavSound();
-                        v.animate().scaleX(1.08f).scaleY(1.08f).setDuration(150).start();
+                        v.animate().scaleX(1.08f).scaleY(1.08f).setDuration(260).setInterpolator(new AppleSpringInterpolator(0.45f)).start();
                         if (viewGridDimmer != null) {
                             viewGridDimmer.animate().alpha(0.0f).setDuration(250).start();
                         }
                     } else {
-                        v.animate().scaleX(1.0f).scaleY(1.0f).setDuration(150).start();
+                        v.animate().scaleX(1.0f).scaleY(1.0f).setDuration(160).setInterpolator(new DecelerateInterpolator()).start();
                     }
                 }
             });
@@ -1073,6 +1099,7 @@ public class MainActivity extends Activity {
             public void onFocusChange(View v, boolean hasFocus) {
                 if (hasFocus) {
                     playNavSound();
+                    v.animate().scaleX(1.08f).scaleY(1.08f).setDuration(260).setInterpolator(new AppleSpringInterpolator(0.45f)).start();
                     if (viewGridDimmer != null) {
                         if (v == btnManageApps) {
                             viewGridDimmer.animate().alpha(0.85f).setDuration(250).start();
@@ -1080,6 +1107,8 @@ public class MainActivity extends Activity {
                             viewGridDimmer.animate().alpha(0.0f).setDuration(250).start();
                         }
                     }
+                } else {
+                    v.animate().scaleX(1.0f).scaleY(1.0f).setDuration(160).setInterpolator(new DecelerateInterpolator()).start();
                 }
             }
         };
@@ -1845,14 +1874,15 @@ public class MainActivity extends Activity {
                 img.setPadding(pad, pad, pad, pad);
             }
 
-            int pillIndex = Math.min(i, topPillIds.length - 1);
-            frame.setNextFocusUpId(topPillIds[pillIndex]);
+            if (watchNextItems != null && !watchNextItems.isEmpty() && watchNextSection != null && watchNextSection.getVisibility() == View.VISIBLE) {
+                frame.setNextFocusUpId(3000);
+            } else {
+                int pillIndex = Math.min(i, topPillIds.length - 1);
+                frame.setNextFocusUpId(topPillIds[pillIndex]);
+            }
 
-            // Connect top pills down to dock items
-            if (i == 0 && btnSleep != null) btnSleep.setNextFocusDownId(500);
-            if (i == 1 && btnInputs != null) btnInputs.setNextFocusDownId(501);
-            if (i == 2 && btnWifi != null) btnWifi.setNextFocusDownId(502);
-            if (i == 3 && btnSettings != null) btnSettings.setNextFocusDownId(503);
+            // Connect top pills down to dock items (or watch next)
+            linkPillsToDock();
 
             // Link down to corresponding grid item if available
             if (!gridItems.isEmpty()) {
@@ -1868,7 +1898,8 @@ public class MainActivity extends Activity {
                     if (hasFocus) {
                         playNavSound();
                         lastFocusedDockIndex = index;
-                        frame.animate().scaleX(1.06f).scaleY(1.06f).setDuration(180).start();
+                        frame.animate().scaleX(1.08f).scaleY(1.08f).setDuration(280)
+                            .setInterpolator(new AppleSpringInterpolator(0.42f)).start();
                         updateDockTitleAndGlow(item);
                         // Return completely to clean 100% scenic landscape at (0, 0)
                         mainScroll.smoothScrollTo(0, 0);
@@ -1876,7 +1907,8 @@ public class MainActivity extends Activity {
                             viewGridDimmer.animate().alpha(0.0f).setDuration(250).start();
                         }
                     } else {
-                        frame.animate().scaleX(1.0f).scaleY(1.0f).setDuration(120).start();
+                        frame.animate().scaleX(1.0f).scaleY(1.0f).setDuration(160)
+                            .setInterpolator(new DecelerateInterpolator()).start();
                     }
                 }
             });
@@ -2333,7 +2365,8 @@ public class MainActivity extends Activity {
                 public void onFocusChange(View v, boolean hasFocus) {
                     if (hasFocus) {
                         playNavSound();
-                        frame.animate().scaleX(1.06f).scaleY(1.06f).setDuration(180).start();
+                        frame.animate().scaleX(1.08f).scaleY(1.08f).setDuration(280)
+                            .setInterpolator(new AppleSpringInterpolator(0.42f)).start();
                         label.animate().alpha(1.0f).setDuration(180).start();
                         if (viewGridDimmer != null) {
                             viewGridDimmer.animate().alpha(0.85f).setDuration(250).start();
@@ -2348,7 +2381,8 @@ public class MainActivity extends Activity {
                             mainScroll.smoothScrollBy(0, location[1] - 260);
                         }
                     } else {
-                        frame.animate().scaleX(1.0f).scaleY(1.0f).setDuration(120).start();
+                        frame.animate().scaleX(1.0f).scaleY(1.0f).setDuration(160)
+                            .setInterpolator(new DecelerateInterpolator()).start();
                         label.animate().alpha(0.0f).setDuration(120).start();
                     }
                 }
@@ -2736,6 +2770,20 @@ public class MainActivity extends Activity {
 
                     View current = getCurrentFocus();
                     if (current != null) {
+                        int explicitId = View.NO_ID;
+                        if (direction == View.FOCUS_UP) explicitId = current.getNextFocusUpId();
+                        else if (direction == View.FOCUS_DOWN) explicitId = current.getNextFocusDownId();
+                        else if (direction == View.FOCUS_LEFT) explicitId = current.getNextFocusLeftId();
+                        else if (direction == View.FOCUS_RIGHT) explicitId = current.getNextFocusRightId();
+
+                        if (explicitId != View.NO_ID) {
+                            View target = findViewById(explicitId);
+                            if (target != null && target.getVisibility() == View.VISIBLE && target.isFocusable()) {
+                                target.requestFocus(direction);
+                                return true;
+                            }
+                        }
+
                         View next = current.focusSearch(direction);
                         if (next != null && next != current) {
                             next.requestFocus(direction);
@@ -2908,6 +2956,7 @@ public class MainActivity extends Activity {
             dropdownInputs.setVisibility(View.GONE);
         }
         checkAndRefreshAppsIfChanged();
+        loadWatchNextAsync();
         resetInactivityTimer();
     }
 
@@ -3324,5 +3373,210 @@ public class MainActivity extends Activity {
         }
         stopSiriOrbPulse();
         siriDismissHandler.removeCallbacksAndMessages(null);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == 101) {
+            loadWatchNextAsync();
+        }
+    }
+
+    private void updateFrostedDockGlass(final int resId) {
+        if (dockContainer == null) return;
+        final int targetRes = resId != 0 ? resId : R.drawable.wallpaper;
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    BitmapFactory.Options opts = new BitmapFactory.Options();
+                    opts.inSampleSize = 4; // Fast decode ~480x270
+                    opts.inPreferredConfig = Bitmap.Config.RGB_565;
+                    Bitmap src = BitmapFactory.decodeResource(getResources(), targetRes, opts);
+                    final Bitmap frosted = FrostGlassHelper.createFrostedBitmap(src);
+                    if (src != null) src.recycle();
+
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            if (dockFrostedDrawable == null) {
+                                dockFrostedDrawable = new FrostGlassHelper.FrostDrawable(
+                                        dockContainer, frosted, 26f, 0x4D12141C);
+                                dockContainer.setBackground(dockFrostedDrawable);
+                            } else {
+                                dockFrostedDrawable.updateBitmap(frosted);
+                            }
+                        }
+                    });
+                } catch (Throwable ignored) {}
+            }
+        }).start();
+    }
+
+    private void loadWatchNextAsync() {
+        if (!WatchNextHelper.hasPermission(this)) {
+            if (watchNextSection != null) watchNextSection.setVisibility(View.GONE);
+            if (masterDockSection != null) {
+                LinearLayout.LayoutParams lp = (LinearLayout.LayoutParams) masterDockSection.getLayoutParams();
+                lp.topMargin = (int) (255 * getResources().getDisplayMetrics().density);
+                masterDockSection.setLayoutParams(lp);
+            }
+            linkPillsToDock();
+            return;
+        }
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                final List<WatchNextHelper.Item> items = WatchNextHelper.loadWatchNext(MainActivity.this);
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        watchNextItems = items;
+                        renderWatchNext();
+                    }
+                });
+            }
+        }).start();
+    }
+
+    private void renderWatchNext() {
+        if (watchNextContainer == null || watchNextSection == null) return;
+        watchNextContainer.removeAllViews();
+
+        if (watchNextItems == null || watchNextItems.isEmpty()) {
+            watchNextSection.setVisibility(View.GONE);
+            if (masterDockSection != null) {
+                LinearLayout.LayoutParams lp = (LinearLayout.LayoutParams) masterDockSection.getLayoutParams();
+                lp.topMargin = (int) (255 * getResources().getDisplayMetrics().density);
+                masterDockSection.setLayoutParams(lp);
+            }
+            linkPillsToDock();
+            return;
+        }
+
+        watchNextSection.setVisibility(View.VISIBLE);
+        if (masterDockSection != null) {
+            LinearLayout.LayoutParams lp = (LinearLayout.LayoutParams) masterDockSection.getLayoutParams();
+            lp.topMargin = (int) (36 * getResources().getDisplayMetrics().density);
+            masterDockSection.setLayoutParams(lp);
+        }
+
+        LayoutInflater inflater = LayoutInflater.from(this);
+        for (int i = 0; i < watchNextItems.size(); i++) {
+            final int index = i;
+            final WatchNextHelper.Item item = watchNextItems.get(i);
+            View card = inflater.inflate(R.layout.item_watch_next_card, watchNextContainer, false);
+            card.setId(3000 + i);
+
+            final ImageView ivArtwork = card.findViewById(R.id.iv_artwork);
+            final View ivPlaceholder = card.findViewById(R.id.iv_play_placeholder);
+            final FrameLayout frame = card.findViewById(R.id.card_artwork_frame);
+            final View focusStroke = card.findViewById(R.id.card_focus_stroke);
+            ProgressBar pb = card.findViewById(R.id.pb_playback_progress);
+            TextView tvTitle = card.findViewById(R.id.tv_card_title);
+            TextView tvSubtitle = card.findViewById(R.id.tv_card_subtitle);
+
+            tvTitle.setText(item.title);
+            if (item.episode != null && !item.episode.isEmpty()) {
+                tvSubtitle.setText(item.episode + " • " + item.appName);
+            } else {
+                tvSubtitle.setText(item.appName);
+            }
+
+            float progress = item.getProgress();
+            if (progress > 0) {
+                pb.setVisibility(View.VISIBLE);
+                pb.setProgress(Math.round(progress * 1000));
+            } else {
+                pb.setVisibility(View.GONE);
+            }
+
+            final String imgUri = item.getBestImageUri();
+            if (imgUri != null && !imgUri.isEmpty()) {
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        final Bitmap thumb = WatchNextHelper.loadThumbnail(MainActivity.this, imgUri);
+                        if (thumb != null) {
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    ivArtwork.setImageBitmap(thumb);
+                                    if (ivPlaceholder != null) ivPlaceholder.setVisibility(View.GONE);
+                                }
+                            });
+                        }
+                    }
+                }).start();
+            }
+
+            card.setFocusable(true);
+            card.setFocusableInTouchMode(true);
+
+            card.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+                @Override
+                public void onFocusChange(View v, boolean hasFocus) {
+                    if (hasFocus) {
+                        playNavSound();
+                        if (focusStroke != null) focusStroke.setVisibility(View.VISIBLE);
+                        frame.animate().scaleX(1.08f).scaleY(1.08f).setDuration(280)
+                            .setInterpolator(new AppleSpringInterpolator(0.42f)).start();
+                        int[] loc = new int[2];
+                        v.getLocationOnScreen(loc);
+                        if (loc[0] > 1400) {
+                            watchNextScroll.smoothScrollBy(loc[0] - 1200, 0);
+                        } else if (loc[0] < 200) {
+                            watchNextScroll.smoothScrollBy(loc[0] - 200, 0);
+                        }
+                    } else {
+                        if (focusStroke != null) focusStroke.setVisibility(View.GONE);
+                        frame.animate().scaleX(1.0f).scaleY(1.0f).setDuration(160)
+                            .setInterpolator(new DecelerateInterpolator()).start();
+                    }
+                }
+            });
+
+            card.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    playNavSound();
+                    WatchNextHelper.launchItem(MainActivity.this, item);
+                }
+            });
+
+            if (i > 0) card.setNextFocusLeftId(3000 + i - 1);
+            if (i < watchNextItems.size() - 1) card.setNextFocusRightId(3000 + i + 1);
+            card.setNextFocusUpId(R.id.btn_sleep);
+            int targetDock = 500 + Math.min(i, Math.max(0, dockItems.size() - 1));
+            card.setNextFocusDownId(targetDock);
+            watchNextContainer.addView(card);
+        }
+
+        linkPillsToDock();
+    }
+
+    private void linkPillsToDock() {
+        int downTarget = (watchNextItems != null && !watchNextItems.isEmpty() && watchNextSection != null && watchNextSection.getVisibility() == View.VISIBLE) ? 3000 : 500;
+        if (btnSleep != null) btnSleep.setNextFocusDownId(downTarget);
+        if (btnInputs != null) btnInputs.setNextFocusDownId(downTarget);
+        if (btnWifi != null) btnWifi.setNextFocusDownId(downTarget);
+        if (btnSettings != null) btnSettings.setNextFocusDownId(downTarget);
+        if (tvWeather != null) tvWeather.setNextFocusDownId(downTarget);
+
+        int[] pillIds = new int[] { R.id.btn_sleep, R.id.btn_inputs, R.id.btn_wifi, R.id.btn_settings };
+        for (int d = 0; d < dockItems.size(); d++) {
+            View dockView = findViewById(500 + d);
+            if (dockView != null) {
+                if (watchNextItems != null && !watchNextItems.isEmpty() && watchNextSection != null && watchNextSection.getVisibility() == View.VISIBLE) {
+                    int targetCard = 3000 + Math.min(d, watchNextItems.size() - 1);
+                    dockView.setNextFocusUpId(targetCard);
+                } else {
+                    int pillIndex = Math.min(d, pillIds.length - 1);
+                    dockView.setNextFocusUpId(pillIds[pillIndex]);
+                }
+            }
+        }
     }
 }

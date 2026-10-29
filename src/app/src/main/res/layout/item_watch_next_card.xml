@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/card_root"
+    android:layout_width="240dp"
+    android:layout_height="wrap_content"
+    android:layout_marginEnd="20dp"
+    android:orientation="vertical"
+    android:focusable="true"
+    android:clickable="true"
+    android:clipChildren="false"
+    android:clipToPadding="false">
+
+    <!-- Card Artwork Container -->
+    <FrameLayout
+        android:id="@+id/card_artwork_frame"
+        android:layout_width="240dp"
+        android:layout_height="135dp"
+        android:background="@drawable/watch_next_card_bg"
+        android:clipToOutline="true"
+        android:clipChildren="true">
+
+        <!-- Artwork / Thumbnail -->
+        <ImageView
+            android:id="@+id/iv_artwork"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="centerCrop" />
+
+        <!-- Fallback Dark Background with Play Icon if no image -->
+        <ImageView
+            android:id="@+id/iv_play_placeholder"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:layout_gravity="center"
+            android:src="@android:drawable/ic_media_play"
+            android:alpha="0.4" />
+
+        <!-- Bottom Gradient Scrim for text readability -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:layout_gravity="bottom"
+            android:background="@drawable/wallpaper_dim_overlay" />
+
+        <!-- Playback Progress Bar (Apple TV red fill) -->
+        <ProgressBar
+            android:id="@+id/pb_playback_progress"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="4dp"
+            android:layout_gravity="bottom"
+            android:layout_marginStart="10dp"
+            android:layout_marginEnd="10dp"
+            android:layout_marginBottom="8dp"
+            android:progressDrawable="@drawable/progress_bar_horizontal"
+            android:max="1000"
+            android:visibility="gone" />
+
+        <!-- Specular Focus Border Overlay (drawn OVER the thumbnail so white ring is crisp) -->
+        <View
+            android:id="@+id/card_focus_stroke"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/watch_next_card_focus"
+            android:visibility="gone" />
+    </FrameLayout>
+
+    <!-- Card Metadata Info (Title & Subtitle below card) -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:paddingStart="4dp"
+        android:paddingEnd="4dp"
+        android:orientation="vertical">
+
+        <!-- Show / Movie Title -->
+        <TextView
+            android:id="@+id/tv_card_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textColor="@color/white"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:letterSpacing="0.02" />
+
+        <!-- Subtitle: Season / Episode & App Badge -->
+        <TextView
+            android:id="@+id/tv_card_subtitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textColor="#A0A0A8"
+            android:textSize="11sp"
+            android:letterSpacing="0.04" />
+    </LinearLayout>
+</LinearLayout>
