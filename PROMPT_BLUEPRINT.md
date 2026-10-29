@@ -32,7 +32,7 @@ Follow this systematic 6-phase engineering workflow:
    - `com.google.android.adservices.api`, `com.google.android.ext.adservices.api` (Privacy Sandbox ad services)
    - `tv.samba.ssm`, `tv.samba.ssm.ui` (ACR automatic content recognition)
 2. Apply manufacturer-specific service disabling (do NOT uninstall system packages, only `disable-user --user 0` to preserve factory reset safety):
-   - **IF TCL:** disable `com.tcl.tv.tclhome_passive`, `com.tcl.partnercustomizer`, `com.tcl.channelplus`, `com.tcl.guard`, `com.tcl.logkit`, `com.tcl.waterfall.overseas`, `com.tcl.useragreement`, `com.tcl.miracast`, `com.tcl.esticker`
+   - **IF TCL:** disable `com.tcl.tv.tclhome_passive`, `com.tcl.partnercustomizer`, `com.tcl.channelplus`, `com.tcl.guard`, `com.tcl.logkit`, `com.tcl.waterfall.overseas`, `com.tcl.useragreement`, `com.tcl.esticker` (always preserve cast/mirroring: `com.google.android.apps.mediashell`, `com.tcl.miracast`, `com.tcl.airplay2`)
    - **IF Sony Bravia:** disable `com.sony.dtv.sonyselect`, `com.sony.dtv.promos`, `com.sony.dtv.discovery`, `com.sony.dtv.bivlinfo`, `com.sony.dtv.tvlaunchercustomizer`, `android.autoinstalls.config.sony.bravia`, `com.sony.dtv.demomode`, `com.sony.dtv.da.service`, `com.qterics.da.product`, `com.sony.dtv.b2b.vendorprotocol` (preserve Bravia picture calibration and audio services)
    - **IF Xiaomi / Mi TV:** disable `com.miui.tv.analytics`, `com.xiaomi.statistic`, `com.mitv.tvhome.atv`, `com.mitv.tvhome.michannel`, `com.mitv.tvhome.mitvplus`, `com.xm.webcontent`, `com.xiaomi.mitv.tvmanager`, `com.xiaomi.mitv.smartshare`, `com.mitv.milinkservice`, `android.autoinstalls.config.xiaomi.amelie`
    - **IF Philips:** disable `org.droidtv.nettvrecommender`, `org.droidtv.channels`, `org.droidtv.demomode`
